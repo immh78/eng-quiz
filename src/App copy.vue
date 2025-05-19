@@ -1,5 +1,5 @@
 <script setup>
-import { database, ref as firebaseRef, get, update } from "./config/firebase";
+import { database, ref as firebaseRef, get, update } from "../config/firebase";
 import { ref, watch, onMounted } from "vue";
 
 const chapters = ref([]);
@@ -261,7 +261,7 @@ onMounted(async () => {
 
     await getChapter(currUser.value);
 
-    await fetch('https://immh78.github.io/vite-project/words.json')
+    await fetch('words.json') //https://immh78.github.io/vite-project/
         .then(response => response.json())
         .then(data => {
             words.value = data.map(item => ({
