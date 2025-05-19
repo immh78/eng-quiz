@@ -257,7 +257,7 @@ watch(chapters, (newValue, oldValue) => {
 onMounted(async () => {
     await getChapter(currUser);
 
-    await fetch('https://immh78.github.io/vite-project/words.json')
+    await fetch('https://immh78.github.io/eng-quiz-cw/words.json')
         .then(response => response.json())
         .then(data => {
             words.value = data.map(item => ({
