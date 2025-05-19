@@ -19,7 +19,7 @@ const correctCount = ref(0);
 const wrongCount = ref(0);
 const progress = ref(0);
 const totalCount = ref(0);
-const currUser = ref("");
+const currUser = ref("GW");
 const preCorrectWord = ref({});
 const preWrongWord = ref({});
 
@@ -257,8 +257,6 @@ watch(chapters, (newValue, oldValue) => {
 });
 
 onMounted(async () => {
-    currUser.value = "GW";
-
     await getChapter(currUser.value);
 
     await fetch('https://immh78.github.io/vite-project/words.json')
@@ -356,7 +354,7 @@ onMounted(async () => {
                             variant="text" size="24px" @click="cancelWrong()"></v-btn>
                     </v-col>
                 </v-row>
-                <v-sheet v-if="wrongWords.length > 0" id="wrongWordRow" class="pa-4 mx-auto" max-width="380"
+                <v-sheet v-if="wrongWords.length > 0" id="wrongWordRow" class="pa-4 mx-auto"
                     rounded="lg" width="92%" color="#fff2f4">
                     <v-row>
                         <v-col cols="auto">
@@ -427,7 +425,7 @@ onMounted(async () => {
 #wrongWordRow {
     position: absolute;
     justify-content: center;
-    top: 410px;
+    top: 430px;
 }
 
 
