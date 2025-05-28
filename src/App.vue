@@ -303,7 +303,15 @@ onMounted(async () => {
 
     await getChapter(currUser);
 
-    await fetch('words.json')
+    let wordsFilePath = "";
+
+    if (currUser === "CW") {
+        wordsFilePath = 'words.json';
+    } else {
+        wordsFilePath = 'https://immh78.github.io/eng-quiz-cw/words.json';
+    }
+
+    await fetch(wordsFilePath)
         .then(response => response.json())
         .then(data => {
             words.value = data.map(item => ({
