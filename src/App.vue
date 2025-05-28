@@ -25,6 +25,9 @@ const totalCount = ref(0);
 const currUser = "GW";
 const preCorrectWord = ref({});
 const preWrongWord = ref({});
+const isChoiceMode = ref(false);
+const choiceMeanings = ref([]);
+
 
 /* DB 관련 변수 */
 const quizChapters = ref(null);
@@ -48,6 +51,7 @@ function changeMode() {
         toggleChapter.value = "";
         selectingWord('');
         pickRandomWord();
+        if (isChoiceMode) makeChoiceMeaning();
     }
 }
 
@@ -55,6 +59,7 @@ function changeChapter(param) {
     initValue();
     selectingWord(param);
     pickRandomWord();
+    if (isChoiceMode) makeChoiceMeaning();
 }
 
 function pickRandomWord() {
@@ -80,7 +85,7 @@ function pickRandomWord() {
 function setWordFondSize(text) {
 
     //console.log(text);
-    
+
     let tempFontSize = 70;
 
     if (text.length > 8) {
@@ -110,6 +115,7 @@ function markCorrect() {
     //console.log("#1", preCorrectWord.value);
 
     pickRandomWord();
+    if (isChoiceMode) makeChoiceMeaning();
     updateProgress();
 }
 
@@ -133,6 +139,7 @@ function markWrong() {
     preWrongWord.value = { ...currentWord.value };
 
     pickRandomWord();
+    if (isChoiceMode) makeChoiceMeaning();
 }
 
 function cancelCorrect() {
@@ -177,6 +184,7 @@ function initValue() {
     isMeaningView.value = false;
     wrongWords.value = [];
     selectWords.value = [];
+    choiceMeanings.value = [];
 }
 
 function showMeaningWrongWord(param) {
@@ -200,10 +208,10 @@ async function fetchquizChapters() {
         });
 }
 
-async function saveQuizChapter(dataParam) {
+async function saveQuizChapter(data) {
     try {
         const dbRef = firebaseRef(database, "eng-quiz-chapter");
-        await update(dbRef, dataParam); // 데이터를 저장
+        await update(dbRef, data); // 데이터를 저장
         console.log("Data saved successfully!");
     } catch (err) {
         console.error("Error saving data:", err);
@@ -247,20 +255,55 @@ watch(chapters, (newValue, oldValue) => {
         // 초기값과 비교하여 달라진것만 update
         if (idx > -1) {
             // 변경된 값에 따라 추가 로직 실행
-            const saveData = { [idx]: { "chapter": chapter, "select": action, "user": currUser }};
+            const saveData = { [idx]: { "chapter": chapter, "select": action, "user": currUser } };
             quizChapters.value[idx].select = action;
             saveQuizChapter(saveData);
             //console.log("chapter update : ", quizChapters.value);
         }
     }
-
-
 });
 
+function makeChoiceMeaning() {
+    choiceMeanings.value = [];
+    choiceMeanings.value.push({ "meaning": currentWord.value.meaning, "isCorrect": true });
+
+    for (let i = 0; i < 4; i++) {
+        choiceMeanings.value.push({ "meaning": getRandomMeaning(), "isCorrect": false });
+    }
+
+    choiceMeanings.value = shuffleArray(choiceMeanings.value);
+    //console.log(choiceMeanings.value);
+}
+
+function getRandomMeaning() {
+    const paramWords = words.value.filter(item => item.word !== currentWord.value.word);
+    const index = Math.floor(Math.random() * paramWords.length);
+    return paramWords[index].meaning;
+}
+
+function shuffleArray(array) {
+    const shuffled = [...array]
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+            ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+    }
+    return shuffled
+}
+
+function onclick_meaning(isCorrect) {
+    if (isCorrect) {
+        markCorrect();        
+    } else {
+        markWrong();
+        
+    }
+}
+
 onMounted(async () => {
+
     await getChapter(currUser);
 
-    await fetch('https://immh78.github.io/eng-quiz-cw/words.json')
+    await fetch('words.json')
         .then(response => response.json())
         .then(data => {
             words.value = data.map(item => ({
@@ -305,6 +348,10 @@ onMounted(async () => {
                             </v-btn>
                         </v-btn-toggle>
                     </v-col>
+                    <v-col class="d-flex justify-end">
+                        <v-switch v-model="isChoiceMode" color="red" label="객관식" hide-details
+                            @click="makeChoiceMeaning()"></v-switch>
+                    </v-col>
                 </v-row>
                 <v-row justify="center">
                     <v-col cols="auto">
@@ -339,32 +386,40 @@ onMounted(async () => {
                 </v-row>
                 <v-row id="buttonRow">
                     <v-col cols="4">
-                        <v-btn color="light-green-lighten-5" @click="isMeaningView = !isMeaningView" style="height: 50px;"><v-icon
-                                color="green">mdi-magnify</v-icon>뜯보기</v-btn>
+                        <v-btn color="light-green-lighten-5" @click="isMeaningView = !isMeaningView"
+                            style="height: 50px;"><v-icon color="green">mdi-magnify</v-icon>뜯보기</v-btn>
                     </v-col>
                     <v-col cols="4" class="no-wrap">
                         <v-badge color="blue" :content="correctCount"><v-btn color="blue-lighten-5"
-                                @click="markCorrect()" style="height: 50px;"><v-icon color="blue">mdi-check-bold</v-icon>정답</v-btn></v-badge>
+                                @click="markCorrect()" style="height: 50px;"><v-icon
+                                    color="blue">mdi-check-bold</v-icon>정답</v-btn></v-badge>
                         <v-btn :color="Object.keys(preCorrectWord).length === 0 ? 'gray' : 'blue'" icon="mdi-undo"
                             variant="text" size="24px" @click="cancelCorrect()"></v-btn>
                     </v-col>
                     <v-col cols="4" class="no-wrap">
-                        <v-badge color="error" :content="wrongCount"><v-btn color="red-lighten-5"
-                                @click="markWrong()" style="height: 50px;"><v-icon color="red">mdi-close-thick</v-icon>오답</v-btn></v-badge>
+                        <v-badge color="error" :content="wrongCount"><v-btn color="red-lighten-5" @click="markWrong()"
+                                style="height: 50px;"><v-icon color="red">mdi-close-thick</v-icon>오답</v-btn></v-badge>
                         <v-btn :color="Object.keys(preWrongWord).length === 0 ? 'gray' : 'red'" icon="mdi-undo"
                             variant="text" size="24px" @click="cancelWrong()"></v-btn>
                     </v-col>
                 </v-row>
-                <v-sheet v-if="wrongWords.length > 0" id="wrongWordRow" class="pa-4 mx-auto"
-                    rounded="lg" width="92%" color="#fff2f4">
+                <v-sheet v-if="wrongWords.length > 0 && !isChoiceMode" class="sheet pa-4 mx-auto" rounded="lg" width="92%"
+                    color="#fff2f4">
                     <v-row>
                         <v-col cols="auto">
-
                             <v-chip v-for="wrongWord in wrongWords" color="red" text-color="white" class="chip-spacing"
                                 @click="showMeaningWrongWord(wrongWord.meaning)">
                                 {{ wrongWord.word }}
                             </v-chip>
                         </v-col>
+                    </v-row>
+                </v-sheet>
+                <v-sheet v-if="isChoiceMode" class="sheet pa-4 mx-auto" rounded="lg" width="92%" color="#f2fff4">
+                    <v-row v-for="item in choiceMeanings">
+                        <v-chip color="green" text-color="white" class="chip-spacing"
+                            @click="onclick_meaning(item.isCorrect)">
+                            {{ item.meaning }}
+                        </v-chip>
                     </v-row>
                 </v-sheet>
             </v-container>
@@ -423,7 +478,7 @@ onMounted(async () => {
     width: 100%;
 }
 
-#wrongWordRow {
+.sheet {
     position: absolute;
     justify-content: center;
     top: 430px;
