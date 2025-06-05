@@ -225,44 +225,35 @@ async function getChapter(user) {
     //console.log(user);
 
     if (quizChapters.value) {
-        chapters.value = Object.values(quizChapters.value)
-            .filter(item => item.select === true && item.user === user) // select가 true인 항목 필터링
-            .map(item => item.chapter);
+        chapters.value = Object.keys(quizChapters.value).filter(key => quizChapters.value[key].select && quizChapters.value[key].user === user);
     }
 }
 
 // Watcher 설정
-watch(chapters, (newValue, oldValue) => {
+// watch(chapters, (newValue, oldValue) => {
 
-    const addedValues = newValue.filter(value => !oldValue.includes(value));
-    const removedValues = oldValue.filter(value => !newValue.includes(value));
+//     const addedValues = newValue.filter(value => !oldValue.includes(value));
+//     const removedValues = oldValue.filter(value => !newValue.includes(value));
 
-    let action = null;
-    let chapter = "";
+//     let action = null;
+//     let chapter = "";
 
-    // 추가된 값과 삭제된 값에 따라 로직 실행
-    if (addedValues.length > 0) {
-        chapter = addedValues[0];
-        action = true;
-    }
-    if (removedValues.length > 0) {
-        action = false;
-        chapter = removedValues[0];
-    }
+//     // 추가된 값과 삭제된 값에 따라 로직 실행
+//     if (addedValues.length > 0) {
+//         chapter = addedValues[0];
+//         action = true;
+//     }
+//     if (removedValues.length > 0) {
+//         action = false;
+//         chapter = removedValues[0];
+//     }
 
-
-    if (action != null) {
-        let idx = Object.values(quizChapters.value).findIndex(item => item.chapter === chapter && item.select != action);
-        // 초기값과 비교하여 달라진것만 update
-        if (idx > -1) {
-            // 변경된 값에 따라 추가 로직 실행
-            const saveData = { [idx]: { "chapter": chapter, "select": action, "user": currUser } };
-            quizChapters.value[idx].select = action;
-            saveQuizChapter(saveData);
-            //console.log("chapter update : ", quizChapters.value);
-        }
-    }
-});
+//     if (action != null) {
+//         const saveData = { [chapter]: { "select": action, "user": currUser } };
+//         quizChapters.value[chapter].select = action;
+//         saveQuizChapter(saveData);
+//     }
+// });
 
 function makeChoiceMeaning() {
     choiceMeanings.value = [];
@@ -386,7 +377,7 @@ onMounted(async () => {
                     <v-col cols="auto">
                         <span id="word" :style="{ fontSize: wordFontSize + 'px' }" @click="speechWord()">{{
                             currentWord.word
-                        }}</span>
+                            }}</span>
                         <span id="wrong">
                             <v-icon color="red-darken-4" v-for="n in currentWord.wrongCount">mdi-close-thick</v-icon>
                         </span>
@@ -431,8 +422,8 @@ onMounted(async () => {
                 </v-sheet>
                 <v-sheet v-if="isChoiceMode" class="sheet pa-4 mx-auto" rounded="lg" width="92%" color="#f2fff4">
                     <v-row v-for="item in choiceMeanings">
-                        <v-chip :color="isWrong && item.isCorrect ? 'red' : 'green'" text-color="white" class="chip-spacing"
-                            @click="onclick_meaning(item.isCorrect)">
+                        <v-chip :color="isWrong && item.isCorrect ? 'red' : 'green'" text-color="white"
+                            class="chip-spacing" @click="onclick_meaning(item.isCorrect)">
                             {{ item.meaning }}
                         </v-chip>
                     </v-row>
@@ -445,9 +436,9 @@ onMounted(async () => {
                 <v-card title="학습 단원 선택">
                     <v-container>
                         <v-row>
-                            <v-col v-for="(c, index) in quizChapters.filter(item => item.user === currUser)"
-                                :key="index" cols="6">
-                                <v-switch v-model="chapters" color="red" :label="c.chapter" :value="c.chapter"
+                            <v-col v-for="c in Object.keys(quizChapters).filter(key => quizChapters[key].user === currUser)"
+                                cols="6">
+                                <v-switch v-model="chapters" color="red" :label="c" :value="c"
                                     hide-details></v-switch>
                             </v-col>
                         </v-row>
