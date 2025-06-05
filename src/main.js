@@ -1,5 +1,6 @@
-import { createApp } from 'vue';
+import { createApp, watch } from 'vue';
 import App from './App.vue';
+import router from './router';
 import { createVuetify } from 'vuetify';
 import 'vuetify/styles'; // Vuetify 스타일 가져오기
 import * as components from 'vuetify/components';
@@ -11,6 +12,36 @@ const vuetify = createVuetify({
   directives,
 });
 
+router.isReady().then(() => {
+  watch(
+      () => router.currentRoute.value.path,
+      (newPath) => {
+          const manifest = document.querySelector('link[rel="manifest"]')
+          if (!manifest) return
+
+          const tools = [
+              'cw',
+              'gw'
+          ];
+
+          manifest.href = "";
+
+          for (const tool of tools) {
+              if (newPath.includes(`/${tool}`)) {
+                  manifest.href = `/eng-quiz/manifests/manifest-${tool}.json?v=` + Date.now();
+                  break;
+              }
+          }
+
+          if (manifest.href === "") {
+              manifest.href = '/eng-quiz/manifests/manifest.json?v=' + Date.now();
+          }
+
+      },
+      { immediate: true }
+  )
+})
+
 const app = createApp(App);
-app.use(vuetify);
+app.use(vuetify).use(router);
 app.mount('#app');
