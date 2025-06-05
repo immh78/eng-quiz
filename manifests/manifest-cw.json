@@ -1,0 +1,21 @@
+{
+    "name": "채원이 영어 단어장",
+    "short_name": "채원이 영어 단어장",
+    "description": "채원이 영어 단어장",
+    "theme_color": "#000000",
+    "background_color": "#ffffff",
+    "display": "standalone",
+    "start_url": "/eng-quiz/#/cw",
+    "icons": [
+      {
+        "src": "/eng-quiz/notebook-cw.png",
+        "sizes": "192x192",
+        "type": "image/png"
+      },
+      {
+        "src": "/eng-quiz/notebook-cw.png",
+        "sizes": "512x512",
+        "type": "image/png"
+      }
+    ]
+  }
