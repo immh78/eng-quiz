@@ -207,6 +207,7 @@ async function fetchquizChapters() {
             console.error("Error fetching data:", err);
             error.value = err.message;
         });
+        
 }
 
 async function saveQuizChapter(data) {
@@ -230,30 +231,34 @@ async function getChapter(user) {
 }
 
 // Watcher 설정
-// watch(chapters, (newValue, oldValue) => {
+watch(chapters, (newValue, oldValue) => {
+    if (Object.keys(oldValue).length === 0) return;
 
-//     const addedValues = newValue.filter(value => !oldValue.includes(value));
-//     const removedValues = oldValue.filter(value => !newValue.includes(value));
+    console.log("new", newValue);
+    console.log("old", oldValue);
+    
+    const addedValues = newValue.filter(value => !oldValue.includes(value));
+    const removedValues = oldValue.filter(value => !newValue.includes(value));
 
-//     let action = null;
-//     let chapter = "";
+    let action = null;
+    let chapter = "";
 
-//     // 추가된 값과 삭제된 값에 따라 로직 실행
-//     if (addedValues.length > 0) {
-//         chapter = addedValues[0];
-//         action = true;
-//     }
-//     if (removedValues.length > 0) {
-//         action = false;
-//         chapter = removedValues[0];
-//     }
+    // 추가된 값과 삭제된 값에 따라 로직 실행
+    if (addedValues.length > 0) {
+        chapter = addedValues[0];
+        action = true;
+    }
+    if (removedValues.length > 0) {
+        action = false;
+        chapter = removedValues[0];
+    }
 
-//     if (action != null) {
-//         const saveData = { [chapter]: { "select": action, "user": currUser } };
-//         quizChapters.value[chapter].select = action;
-//         saveQuizChapter(saveData);
-//     }
-// });
+    if (action != null) {
+        const saveData = { [chapter]: { "select": action, "user": currUser } };
+        quizChapters.value[chapter].select = action;
+        saveQuizChapter(saveData);
+    }
+});
 
 function makeChoiceMeaning() {
     choiceMeanings.value = [];
@@ -295,7 +300,6 @@ async function onclick_meaning(isCorrect) {
 
     }
 }
-
 
 onMounted(async () => {
     if (window.location.href.includes('/gw')) {
@@ -436,7 +440,7 @@ onMounted(async () => {
                 <v-card title="학습 단원 선택">
                     <v-container>
                         <v-row>
-                            <v-col v-for="c in Object.keys(quizChapters).filter(key => quizChapters[key].user === currUser)"
+                            <v-col v-for="c in Object.keys(quizChapters).filter(key => quizChapters[key].user === currUser).sort()"
                                 cols="6">
                                 <v-switch v-model="chapters" color="red" :label="c" :value="c"
                                     hide-details></v-switch>
