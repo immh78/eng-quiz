@@ -1,6 +1,6 @@
 import { onMounted } from 'vue';
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
-import { database, ref, get, set, update } from '../config/firebase';
+import { database, ref, get, update } from '../config/firebase';
 
 // 로그를 저장하는 함수
 const logPageVisit = async () => {
@@ -29,14 +29,26 @@ const logPageVisit = async () => {
 
   try {
     const snapshot = await get(logsRef);
+
     let existingLogs = [];
+    let key = 0;
 
     if (snapshot.exists()) {
       existingLogs = snapshot.val();
+      const LogKeys = Object.keys(existingLogs).map(Number); // 문자열이 아닌 숫자로 변환
+      // 0부터 순차적으로 증가하며 비어있는 값을 찾기
+      while (LogKeys.includes(key)) {
+        key++;
+      }
+    } else {
+      key = 0;
     }
 
-    existingLogs.push(logEntry);
-    await set(logsRef, existingLogs);
+    const inputLog = {
+      [key]: logEntry
+    }
+    await update(logsRef, inputLog);
+
   } catch (error) {
     console.error('Error saving log to Firebase:', error);
   }
