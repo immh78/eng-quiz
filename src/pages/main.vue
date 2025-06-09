@@ -466,7 +466,7 @@ onMounted(async () => {
 
 #wordRow {
     position: absolute;
-    top: 180px;
+    top: 200px;
     justify-content: center;
     display: flex;
     width: 100%;
@@ -474,7 +474,7 @@ onMounted(async () => {
 
 #buttonRow {
     position: absolute;
-    top: 340px;
+    top: 350px;
     justify-content: center;
     display: flex;
     width: 100%;
@@ -482,7 +482,7 @@ onMounted(async () => {
 
 #meaningRow {
     position: absolute;
-    top: 280px;
+    top: 300px;
     justify-content: center;
     display: flex;
     width: 100%;
