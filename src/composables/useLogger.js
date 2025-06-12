@@ -1,18 +1,13 @@
 import { onMounted } from 'vue';
-import FingerprintJS from '@fingerprintjs/fingerprintjs';
 import { database, ref, get, update } from '../config/firebase';
+import { useUserStore } from '../store/user';
 
 // 로그를 저장하는 함수
 const logPageVisit = async () => {
-  // 1. Visitor ID 생성
-  const fp = await FingerprintJS.load();
-  const result = await fp.get();
-  const visitorId = result.visitorId;
-
   // 2. 현재 페이지의 ID 추출
-  const pageId = extractLastPathSegment(window.location.href);
-
-  //console.log('Page ID:', pageId); // 디버깅용 로그
+  let pageId = extractLastPathSegment(window.location.href);
+  pageId = pageId === "#" ? "lunch-reservation" : pageId;
+  console.log('Page ID:', pageId); // 디버깅용 로그
 
   // 3. 현재 시각
   const d = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
@@ -24,7 +19,10 @@ const logPageVisit = async () => {
     + String(d.getSeconds()).padStart(2, '0');
 
   // 4. 로그 구조
-  const logEntry = { datetime, visitorId };
+  const userStore = useUserStore();
+  const uid = userStore.user.uid||'anonymous'; // 로그인하지 않은 경우 'anonymous'로 설정
+ 
+  const logEntry = { datetime, uid };
   const logsRef = ref(database, `logs/${pageId}`);
 
   try {

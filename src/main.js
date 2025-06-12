@@ -6,6 +6,9 @@ import 'vuetify/styles'; // Vuetify 스타일 가져오기
 import * as components from 'vuetify/components';
 import * as directives from 'vuetify/directives';
 import '@mdi/font/css/materialdesignicons.css'; // MDI 아이콘 스타일 추가
+import { createPinia } from 'pinia';
+import persistedState from 'pinia-plugin-persistedstate'; 
+
 
 const vuetify = createVuetify({
   components,
@@ -42,6 +45,9 @@ router.isReady().then(() => {
   )
 })
 
+const pinia = createPinia();
+pinia.use(persistedState); 
+
 const app = createApp(App);
-app.use(vuetify).use(router);
+app.use(vuetify).use(router).use(pinia);
 app.mount('#app');
