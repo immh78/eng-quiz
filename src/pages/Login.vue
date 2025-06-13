@@ -1,3 +1,54 @@
+<script setup>
+import { ref } from 'vue';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../config/firebase';
+import { useRouter, useRoute } from 'vue-router';
+import { useCookies } from '@vueuse/integrations/useCookies';
+
+const email = ref('');
+const password = ref('');
+const showPassword = ref(false);
+const loading = ref(false);
+const route = useRoute();
+const router = useRouter();
+const cookies = useCookies();
+
+
+async function login() {
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email.value, password.value);
+    const user = userCredential.user;
+    const token = await user.getIdToken();
+
+    cookies.set('authToken', token);
+
+    // 리디렉트 경로 있으면 해당 페이지로, 없으면 홈으로
+    const redirectTo = route.query.redirect || '/';
+    router.push(redirectTo);
+
+  } catch (error) {
+    console.error('로그인 오류:', error.code);
+    switch (error.code) {
+      case 'auth/user-not-found':
+        alert('등록되지 않은 이메일입니다.');
+        break;
+      case 'auth/wrong-password':
+        alert('비밀번호가 올바르지 않습니다.');
+        break;
+      case 'auth/invalid-credential':
+        alert('이메일 또는 비밀번호가 유효하지 않습니다.');
+        break;
+      default:
+        alert('로그인에 실패했습니다.');
+    }
+  }
+};
+
+function goToRegister() {
+  router.push('/register'); // 회원가입 페이지 경로
+};
+</script>
+
 <template>
   <v-container class="d-flex align-center justify-center fill-height">
     <v-card width="400" class="pa-6">
@@ -24,58 +75,6 @@
     </v-card>
   </v-container>
 </template>
-
-
-<script setup>
-import { ref } from 'vue';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../config/firebase';
-import { useRouter } from 'vue-router';
-import { useCookies } from '@vueuse/integrations/useCookies';
-import { useUserStore } from '../store/user';
-
-const email = ref('');
-const password = ref('');
-const showPassword = ref(false);
-const loading = ref(false);
-
-const router = useRouter();
-const cookies = useCookies();
-const userStore = useUserStore(); // ✅ 여기서 실행해서 인스턴스를 얻음
-
-async function login() {
-  try {
-    const userCredential = await signInWithEmailAndPassword(auth, email.value, password.value);
-    const user = userCredential.user;
-    const token = await user.getIdToken();
-
-    cookies.set('authToken', token);
-    userStore.setUser({ email: user.email });
-
-    router.push('/');
-  } catch (error) {
-    console.error('로그인 오류:', error.code);
-    switch (error.code) {
-      case 'auth/user-not-found':
-        alert('등록되지 않은 이메일입니다.');
-        break;
-      case 'auth/wrong-password':
-        alert('비밀번호가 올바르지 않습니다.');
-        break;
-      case 'auth/invalid-credential':
-        alert('이메일 또는 비밀번호가 유효하지 않습니다.');
-        break;
-      default:
-        alert('로그인에 실패했습니다.');
-    }
-  }
-};
-
-function goToRegister() {
-  router.push('/register'); // 회원가입 페이지 경로
-};
-</script>
-
 
 <style scoped>
 .fill-height {
