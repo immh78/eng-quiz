@@ -23,7 +23,7 @@ const logPageVisit = async () => {
   const uid = userStore.user.uid||'anonymous'; // 로그인하지 않은 경우 'anonymous'로 설정
  
   const logEntry = { datetime, uid };
-  const logsRef = ref(database, `logs/${pageId}`);
+  const logsRef = ref(database, `logs/eng-quiz-${pageId}`);
 
   try {
     const snapshot = await get(logsRef);
