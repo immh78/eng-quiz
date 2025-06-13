@@ -1,5 +1,5 @@
 <script setup>
-import { database, ref as firebaseRef, get, update } from "../config/firebase";
+import { database, ref as firebaseRef, get, update, set, remove } from "../config/firebase";
 import { ref, watch, onMounted } from "vue";
 import { useLogger } from '../composables/useLogger';
 
@@ -28,6 +28,7 @@ const preCorrectWord = ref({});
 const preWrongWord = ref({});
 const isChoiceMode = ref(false);
 const choiceMeanings = ref([]);
+const checkWords = ref([]);
 
 
 /* DB 관련 변수 */
@@ -37,7 +38,8 @@ const error = ref(null);
 function selectingWord(param) {
     if (toggleMode.value == "quiz") {
         selectWords.value = words.value.filter(item => chapters.value.includes(item.chapter));
-        toggleChapter.value = "";
+    } else if (toggleMode.value == "check") {
+        selectWords.value = checkWords.value;
     } else {
         selectWords.value = words.value.filter(item => item.chapter === param);
     }
@@ -48,9 +50,9 @@ function selectingWord(param) {
 function changeMode() {
     initValue();
 
-    if (toggleMode.value == "quiz") {
+    if (toggleMode.value == "quiz" || toggleMode.value == "check") {
         toggleChapter.value = "";
-        selectingWord('');
+        selectingWord(toggleMode.value);
         pickRandomWord();
         if (isChoiceMode) makeChoiceMeaning();
     }
@@ -74,7 +76,7 @@ function pickRandomWord() {
     isMeaningView.value = false;
 
     let index = 0;
-    if (toggleMode.value == "quiz") {
+    if (toggleMode.value != "memorize") {
         index = Math.floor(Math.random() * selectWords.value.length);
     } else {
         index = 0;
@@ -108,6 +110,18 @@ function markCorrect() {
 
     if (currentWord.value.wrongCount > 0) {
         wrongWords.value = wrongWords.value.filter(item => item.word !== currentWord.value.word);
+    }
+    console.log("mode", toggleMode.value)
+
+    if (toggleMode.value === 'check') {
+        checkWords.value.splice(currentWord.value.key, 1);
+        saveCheckWord();
+
+        Object.keys(checkWords.value).forEach(key => {
+            checkWords.value[key]["key"] = Number(key);
+        });
+
+        console.log("checkWords", checkWords.value);
     }
 
 
@@ -194,11 +208,19 @@ function showMeaningWrongWord(param) {
 }
 
 async function fetchquizChapters() {
-    const dbRef = firebaseRef(database, "eng-quiz-chapter");
+    const dbRef = firebaseRef(database, "eng-quiz");
     await get(dbRef)
         .then(snapshot => {
             if (snapshot.exists()) {
-                quizChapters.value = snapshot.val();
+                const data = snapshot.val();
+                quizChapters.value = data.chapter;
+                checkWords.value = data.check?.[currUser] || [];
+
+                Object.keys(checkWords.value).forEach(key => {
+                    checkWords.value[key]["key"] = Number(key);
+                });
+
+                console.log("checkWords.value", checkWords.value);
             } else {
                 console.log("No data available");
             }
@@ -207,12 +229,12 @@ async function fetchquizChapters() {
             console.error("Error fetching data:", err);
             error.value = err.message;
         });
-        
+
 }
 
 async function saveQuizChapter(data) {
     try {
-        const dbRef = firebaseRef(database, "eng-quiz-chapter");
+        const dbRef = firebaseRef(database, "eng-quiz/chapter");
         await update(dbRef, data); // 데이터를 저장
         console.log("Data saved successfully!");
     } catch (err) {
@@ -230,13 +252,42 @@ async function getChapter(user) {
     }
 }
 
+function addCheckWord(word) {
+    checkWords.value.push(word);
+    saveCheckWord();
+}
+
+async function saveCheckWord() {
+    const data = { [currUser]: checkWords.value };
+
+    console.log("saveCheckWord", data);
+    try {
+        const dbRef = firebaseRef(database, "eng-quiz/check");
+        await set(dbRef, data); // 데이터를 저장
+        console.log("Data saved successfully!");
+    } catch (err) {
+        console.error("Error saving data:", err);
+    }
+}
+
+// async function deleteCheckWord(key) {
+//     try {
+//         const dbRef = firebaseRef(database, `eng-quiz/check/${currUser}/${key}`);
+//         await remove(dbRef); // 데이터를 저장
+//         console.log("Data saved successfully!");
+//     } catch (err) {
+//         console.error("Error saving data:", err);
+//     }
+
+// }
+
 // Watcher 설정
 watch(chapters, (newValue, oldValue) => {
     if (Object.keys(oldValue).length === 0) return;
 
     console.log("new", newValue);
     console.log("old", oldValue);
-    
+
     const addedValues = newValue.filter(value => !oldValue.includes(value));
     const removedValues = oldValue.filter(value => !newValue.includes(value));
 
@@ -301,6 +352,22 @@ async function onclick_meaning(isCorrect) {
     }
 }
 
+function getNewKey(list) {
+    let key = 0;
+    if (list) {
+        const keys = Object.keys(list).map(Number); // 문자열이 아닌 숫자로 변환
+        // 0부터 순차적으로 증가하며 비어있는 값을 찾기
+        while (keys.includes(key)) {
+            key++;
+        }
+    } else {
+        key = 0;
+    }
+
+    return key;
+}
+
+
 onMounted(async () => {
     if (window.location.href.includes('/gw')) {
         currUser = "GW";
@@ -356,11 +423,18 @@ onMounted(async () => {
                                 <span>암기</span>
                                 <v-icon end>mdi-chat-alert</v-icon>
                             </v-btn>
+                            <v-btn value="check" @click="changeMode()">
+                                <span>체크</span><small>({{ checkWords?.length || 0 }})</small>
+                                <v-icon end>mdi-note-edit</v-icon>
+                            </v-btn>
                         </v-btn-toggle>
                     </v-col>
                     <v-col class="d-flex justify-end">
-                        <v-switch v-model="isChoiceMode" color="red" label="객관식" hide-details
-                            @click="makeChoiceMeaning()"></v-switch>
+                        <div class="d-flex flex-column align-center">
+                            <span style="font-size: 12px; color: gray;">객관식</span>
+                            <v-switch v-model="isChoiceMode" color="red" hide-details
+                                @click="makeChoiceMeaning()"></v-switch>
+                        </div>
                     </v-col>
                 </v-row>
                 <v-row justify="center">
@@ -368,8 +442,8 @@ onMounted(async () => {
                         <v-btn-toggle v-model="toggleChapter" color="deep-purple-accent-3" rounded="0" group
                             class="multi-line-btn-toggle">
                             <v-btn v-for="chapter in chapters" :key="chapter" :value="chapter"
-                                :readonly="toggleMode == 'quiz' ? true : false"
-                                :style="chapter == currentWord.chapter && toggleMode == 'quiz' ? 'text-decoration: underline' : ''"
+                                :readonly="toggleMode != 'memorize' ? true : false"
+                                :style="chapter == currentWord.chapter && toggleMode != 'memorize' ? 'text-decoration: underline' : ''"
                                 @click="changeChapter(chapter)">
                                 {{ chapter }}
                             </v-btn>
@@ -381,7 +455,7 @@ onMounted(async () => {
                     <v-col cols="auto">
                         <span id="word" :style="{ fontSize: wordFontSize + 'px' }" @click="speechWord()">{{
                             currentWord.word
-                            }}</span>
+                        }}</span>
                         <span id="wrong">
                             <v-icon color="red-darken-4" v-for="n in currentWord.wrongCount">mdi-close-thick</v-icon>
                         </span>
@@ -418,7 +492,7 @@ onMounted(async () => {
                     <v-row>
                         <v-col cols="auto">
                             <v-chip v-for="wrongWord in wrongWords" color="red" text-color="white" class="chip-spacing"
-                                @click="showMeaningWrongWord(wrongWord.meaning)">
+                                @click="addCheckWord(wrongWord)">
                                 {{ wrongWord.word }}
                             </v-chip>
                         </v-col>
@@ -440,10 +514,10 @@ onMounted(async () => {
                 <v-card title="학습 단원 선택">
                     <v-container>
                         <v-row>
-                            <v-col v-for="c in Object.keys(quizChapters).filter(key => quizChapters[key].user === currUser).sort()"
+                            <v-col
+                                v-for="c in Object.keys(quizChapters).filter(key => quizChapters[key].user === currUser).sort()"
                                 cols="6">
-                                <v-switch v-model="chapters" color="red" :label="c" :value="c"
-                                    hide-details></v-switch>
+                                <v-switch v-model="chapters" color="red" :label="c" :value="c" hide-details></v-switch>
                             </v-col>
                         </v-row>
                     </v-container>
