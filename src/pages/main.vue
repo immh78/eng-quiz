@@ -1,9 +1,6 @@
 <script setup>
 import { database, ref as firebaseRef, get, update, set, remove } from "../config/firebase";
 import { ref, watch, onMounted } from "vue";
-import { useLogger } from '../composables/useLogger';
-
-useLogger();
 
 let currUser = "";
 
