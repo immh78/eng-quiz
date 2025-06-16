@@ -83,9 +83,6 @@ function pickRandomWord() {
 }
 
 function setWordFondSize(text) {
-
-    //console.log(text);
-
     let tempFontSize = 70;
 
     if (text.length > 8) {
