@@ -108,7 +108,7 @@ function markCorrect() {
     if (currentWord.value.wrongCount > 0) {
         wrongWords.value = wrongWords.value.filter(item => item.word !== currentWord.value.word);
     }
-    console.log("mode", toggleMode.value)
+    //console.log("mode", toggleMode.value)
 
     if (toggleMode.value === 'check') {
         checkWords.value.splice(currentWord.value.key, 1);
@@ -118,7 +118,7 @@ function markCorrect() {
             checkWords.value[key]["key"] = Number(key);
         });
 
-        console.log("checkWords", checkWords.value);
+        //console.log("checkWords", checkWords.value);
     }
 
 
@@ -217,7 +217,7 @@ async function fetchquizChapters() {
                     checkWords.value[key]["key"] = Number(key);
                 });
 
-                console.log("checkWords.value", checkWords.value);
+                //console.log("checkWords.value", checkWords.value);
             } else {
                 console.log("No data available");
             }
@@ -257,7 +257,7 @@ function addCheckWord(word) {
 async function saveCheckWord() {
     const data = { [currUser]: checkWords.value };
 
-    console.log("saveCheckWord", data);
+    //console.log("saveCheckWord", data);
     try {
         const dbRef = firebaseRef(database, "eng-quiz/check");
         await set(dbRef, data); // 데이터를 저장
@@ -282,8 +282,8 @@ async function saveCheckWord() {
 watch(chapters, (newValue, oldValue) => {
     if (Object.keys(oldValue).length === 0) return;
 
-    console.log("new", newValue);
-    console.log("old", oldValue);
+    //console.log("new", newValue);
+    //console.log("old", oldValue);
 
     const addedValues = newValue.filter(value => !oldValue.includes(value));
     const removedValues = oldValue.filter(value => !newValue.includes(value));
