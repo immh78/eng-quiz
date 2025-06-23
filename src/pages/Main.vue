@@ -456,7 +456,7 @@ onMounted(async () => {
                         </span>
                         <v-icon class="ml-2" v-if="currentWord.word && selectWords.length > 0" style="vertical-align: top;"
                             @click="toggleCheckWord(currentWord, isCheckWord)" size="32px"
-                            :color="isCheckWord ? 'red' : 'black'">mdi-check</v-icon>
+                            :color="isCheckWord ? 'red' : 'grey-lighten-3'">mdi-check</v-icon>
                     </v-col>
                 </v-row>
                 <v-row id="meaningRow">
