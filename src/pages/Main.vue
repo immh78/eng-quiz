@@ -369,7 +369,7 @@ async function onClickHint() {
     makeChoiceMeaning();
     //console.log("힌트", choiceMeanings.value)
     isChoiceMode.value = true;
-    await sleep(2000);
+    await sleep(3000);
     isChoiceMode.value = false;
 }
 
