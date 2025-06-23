@@ -1,6 +1,6 @@
 <script setup>
 import { database, ref as firebaseRef, get, update, set, remove } from "../config/firebase";
-import { ref, watch, onMounted } from "vue";
+import { ref, watch, onMounted, computed } from "vue";
 
 let currUser = "";
 
@@ -27,10 +27,16 @@ const isChoiceMode = ref(false);
 const choiceMeanings = ref([]);
 const checkWords = ref([]);
 
+const isCheckWord = computed(() =>
+    checkWords.value.some(item => item.word === currentWord.value.word)
+);
+
 
 /* DB 관련 변수 */
 const quizChapters = ref(null);
 const error = ref(null);
+
+
 
 function selectingWord(param) {
     if (toggleMode.value == "quiz") {
@@ -107,17 +113,15 @@ function markCorrect() {
     }
     //console.log("mode", toggleMode.value)
 
-    if (toggleMode.value === 'check') {
-        checkWords.value.splice(currentWord.value.key, 1);
-        saveCheckWord();
+    // if (toggleMode.value === 'check') {
+    //     checkWords.value.splice(currentWord.value.key, 1);
+    //     saveCheckWord();
 
-        Object.keys(checkWords.value).forEach(key => {
-            checkWords.value[key]["key"] = Number(key);
-        });
+    //     Object.keys(checkWords.value).forEach(key => {
+    //         checkWords.value[key]["key"] = Number(key);
+    //     });
 
-        //console.log("checkWords", checkWords.value);
-    }
-
+    // }
 
     preCorrectWord.value = { ...currentWord.value };
 
@@ -201,30 +205,6 @@ function showMeaningWrongWord(param) {
     isMeaningWrongWordView.value = true;
 }
 
-async function fetchquizChapters() {
-    const dbRef = firebaseRef(database, "eng-quiz");
-    await get(dbRef)
-        .then(snapshot => {
-            if (snapshot.exists()) {
-                const data = snapshot.val();
-                quizChapters.value = data.chapter;
-                checkWords.value = data.check?.[currUser] || [];
-
-                Object.keys(checkWords.value).forEach(key => {
-                    checkWords.value[key]["key"] = Number(key);
-                });
-
-                //console.log("checkWords.value", checkWords.value);
-            } else {
-                console.log("No data available");
-            }
-        })
-        .catch(err => {
-            console.error("Error fetching data:", err);
-            error.value = err.message;
-        });
-
-}
 
 async function saveQuizChapter(data) {
     try {
@@ -236,8 +216,23 @@ async function saveQuizChapter(data) {
     }
 }
 
-async function getChapter(user) {
-    await fetchquizChapters();
+async function selectChapter(user) {
+    const dbRef = firebaseRef(database, "eng-quiz");
+    await get(dbRef)
+        .then(snapshot => {
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                quizChapters.value = data.chapter;
+                checkWords.value = data.check?.[currUser] || [];
+
+            } else {
+                console.log("No data available");
+            }
+        })
+        .catch(err => {
+            console.error("Error fetching data:", err);
+            error.value = err.message;
+        });
 
     //console.log(user);
 
@@ -246,14 +241,21 @@ async function getChapter(user) {
     }
 }
 
-function addCheckWord(word) {
-    checkWords.value.push(word);
+function toggleCheckWord(currWord, isExist) {
+    if (isExist) {
+        const index = checkWords.value.findIndex(item => item.word === currWord.word);
+        if (index !== -1) {
+        checkWords.value.splice(index, 1);
+        }
+
+    } else {
+        checkWords.value.push({ ...currWord });
+    }
     saveCheckWord();
 }
 
 async function saveCheckWord() {
     const data = { [currUser]: checkWords.value };
-
     //console.log("saveCheckWord", data);
     try {
         const dbRef = firebaseRef(database, "eng-quiz/check");
@@ -369,7 +371,7 @@ onMounted(async () => {
         currUser = "CW";
     }
 
-    await getChapter(currUser);
+    await selectChapter(currUser);
 
     const wordsFilePath = 'words.json';
 
@@ -441,7 +443,6 @@ onMounted(async () => {
                                 @click="changeChapter(chapter)">
                                 {{ chapter }}
                             </v-btn>
-
                         </v-btn-toggle>
                     </v-col>
                 </v-row>
@@ -449,10 +450,13 @@ onMounted(async () => {
                     <v-col cols="auto">
                         <span id="word" :style="{ fontSize: wordFontSize + 'px' }" @click="speechWord()">{{
                             currentWord.word
-                        }}</span>
+                            }}</span>
                         <span id="wrong">
                             <v-icon color="red-darken-4" v-for="n in currentWord.wrongCount">mdi-close-thick</v-icon>
                         </span>
+                        <v-icon class="ml-2" v-if="currentWord.word && selectWords.length > 0" style="vertical-align: top;"
+                            @click="toggleCheckWord(currentWord, isCheckWord)" size="32px"
+                            :color="isCheckWord ? 'red' : 'black'">mdi-check</v-icon>
                     </v-col>
                 </v-row>
                 <v-row id="meaningRow">
@@ -465,18 +469,18 @@ onMounted(async () => {
                 <v-row id="buttonRow">
                     <v-col cols="4">
                         <v-btn color="light-green-lighten-5" @click="isMeaningView = !isMeaningView"
-                            style="height: 50px;"><v-icon color="green">mdi-magnify</v-icon>뜯보기</v-btn>
+                            style="height: 50px;"><v-icon color="green">mdi-magnify</v-icon>뜻보기</v-btn>
                     </v-col>
                     <v-col cols="4" class="no-wrap">
                         <v-badge color="blue" :content="correctCount"><v-btn color="blue-lighten-5"
                                 @click="markCorrect()" style="height: 50px;"><v-icon
-                                    color="blue">mdi-check-bold</v-icon>정답</v-btn></v-badge>
+                                    color="blue">mdi-circle-outline</v-icon>정답</v-btn></v-badge>
                         <v-btn :color="Object.keys(preCorrectWord).length === 0 ? 'gray' : 'blue'" icon="mdi-undo"
                             variant="text" size="24px" @click="cancelCorrect()"></v-btn>
                     </v-col>
                     <v-col cols="4" class="no-wrap">
                         <v-badge color="error" :content="wrongCount"><v-btn color="red-lighten-5" @click="markWrong()"
-                                style="height: 50px;"><v-icon color="red">mdi-close-thick</v-icon>오답</v-btn></v-badge>
+                                style="height: 50px;"><v-icon color="red">mdi-close</v-icon>오답</v-btn></v-badge>
                         <v-btn :color="Object.keys(preWrongWord).length === 0 ? 'gray' : 'red'" icon="mdi-undo"
                             variant="text" size="24px" @click="cancelWrong()"></v-btn>
                     </v-col>
@@ -485,8 +489,7 @@ onMounted(async () => {
                     width="92%" color="#fff2f4">
                     <v-row>
                         <v-col cols="auto">
-                            <v-chip v-for="wrongWord in wrongWords" color="red" text-color="white" class="chip-spacing"
-                                @click="addCheckWord(wrongWord)">
+                            <v-chip v-for="wrongWord in wrongWords" color="red" text-color="white" class="chip-spacing">
                                 {{ wrongWord.word }}
                             </v-chip>
                         </v-col>
@@ -518,7 +521,7 @@ onMounted(async () => {
                 </v-card>
                 <v-fab icon="mdi-close" color="blue" @click="isSetPopup = false" class="fixed-fab">
                 </v-fab>
-            </v-dialog>
+            </v-dialog>            
         </v-main>
 
         <v-progress-linear :model-value="progress" color="green"></v-progress-linear>
