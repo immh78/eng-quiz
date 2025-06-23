@@ -363,6 +363,16 @@ function getNewKey(list) {
     return key;
 }
 
+async function onClickHint() {
+    
+    
+    makeChoiceMeaning();
+    //console.log("힌트", choiceMeanings.value)
+    isChoiceMode.value = true;
+    await sleep(2000);
+    isChoiceMode.value = false;
+}
+
 
 onMounted(async () => {
     if (window.location.href.includes('/gw')) {
@@ -467,21 +477,23 @@ onMounted(async () => {
                     </v-col>
                 </v-row>
                 <v-row id="buttonRow">
-                    <v-col cols="4">
+                    <v-col cols="4" class="no-wrap">
                         <v-btn color="light-green-lighten-5" @click="isMeaningView = !isMeaningView"
                             style="height: 50px;"><v-icon color="green">mdi-magnify</v-icon>뜻보기</v-btn>
+                            <v-btn :color="isChoiceMode ? 'green' : 'rgba(0, 0, 0, 0.2)'" icon="mdi-lightbulb-alert"
+                            variant="text" size="24px" @click="onClickHint()"></v-btn>
                     </v-col>
                     <v-col cols="4" class="no-wrap">
                         <v-badge color="blue" :content="correctCount"><v-btn color="blue-lighten-5"
                                 @click="markCorrect()" style="height: 50px;"><v-icon
                                     color="blue">mdi-circle-outline</v-icon>정답</v-btn></v-badge>
-                        <v-btn :color="Object.keys(preCorrectWord).length === 0 ? 'gray' : 'blue'" icon="mdi-undo"
+                        <v-btn :color="Object.keys(preCorrectWord).length === 0 ? 'rgba(0, 0, 0, 0.2)' : 'blue'" icon="mdi-undo"
                             variant="text" size="24px" @click="cancelCorrect()"></v-btn>
                     </v-col>
                     <v-col cols="4" class="no-wrap">
                         <v-badge color="error" :content="wrongCount"><v-btn color="red-lighten-5" @click="markWrong()"
                                 style="height: 50px;"><v-icon color="red">mdi-close</v-icon>오답</v-btn></v-badge>
-                        <v-btn :color="Object.keys(preWrongWord).length === 0 ? 'gray' : 'red'" icon="mdi-undo"
+                        <v-btn :color="Object.keys(preWrongWord).length === 0 ? 'rgba(0, 0, 0, 0.2)' : 'red'" icon="mdi-undo"
                             variant="text" size="24px" @click="cancelWrong()"></v-btn>
                     </v-col>
                 </v-row>
