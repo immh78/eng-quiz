@@ -198,6 +198,7 @@ function initValue() {
     wrongWords.value = [];
     selectWords.value = [];
     choiceMeanings.value = [];
+    preCorrectWord.value = {};
 }
 
 function showMeaningWrongWord(param) {
