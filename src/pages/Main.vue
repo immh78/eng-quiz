@@ -548,7 +548,7 @@ onMounted(async () => {
         <v-dialog v-model="isSetPopup" max-width="500">
             <v-card>
                 <v-card-title>학습 단원 선택
-                    <v-btn icon="mdi-broom" flat @click="resetChapter()"></v-btn>
+                    <v-btn icon="mdi-selection-remove" flat @click="resetChapter()"></v-btn>
                 </v-card-title>
                 <v-card-text>
                     <v-select v-model="selectBook" :items="books" variant="outlined" />
