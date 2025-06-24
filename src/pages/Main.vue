@@ -546,12 +546,11 @@ onMounted(async () => {
             </v-snackbar>
         </v-main>
         <v-dialog v-model="isSetPopup" max-width="500">
-            <v-card>
-                <v-card-title>학습 단원 선택
-                    <v-btn icon="mdi-selection-remove" flat @click="resetChapter()"></v-btn>
-                </v-card-title>
+            <v-card color="yellow-lighten-5">
+                <v-card-title>학습 단원 선택</v-card-title>
                 <v-card-text>
                     <v-select v-model="selectBook" :items="books" variant="outlined" />
+                    <v-btn color="yellow-darken-4" @click="resetChapter()" variant="tonal"><v-icon>mdi-selection-remove</v-icon> 전체선택해제</v-btn>
                     <v-container>
                         <v-row no-gutters>
                             <v-col
