@@ -1,5 +1,5 @@
 <script setup>
-import { database, ref as firebaseRef, get, update, set, remove } from "../config/firebase";
+import { database, ref as firebaseRef, get, update, set } from "../config/firebase";
 import { ref, watch, onMounted, computed } from "vue";
 
 let currUser = "";

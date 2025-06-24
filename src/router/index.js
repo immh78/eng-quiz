@@ -1,6 +1,5 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
 import { database, ref as firebaseRef, push } from "../config/firebase";
-import { isLoggedIn } from '../config/authGuard';
 import { useUserStore } from '../store/user';
 
 import Main from '../pages/Main.vue';
@@ -33,8 +32,11 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
+  const userStore = useUserStore();
+  const uid = userStore.user?.uid;
+
   // 로그인 필요
-  if (to.meta.requiresAuth && !isLoggedIn()) {
+  if (to.meta.requiresAuth && !uid) {
     return next({ path: '/login', query: { redirect: to.fullPath } });
   }
 
@@ -94,7 +96,7 @@ router.afterEach((to) => {
   if (to.meta?.loggable && uid) {
     // '/'는 실질적으로 대시보드 같은 첫 화면이므로 필요하면 별도 처리
     //console.log("router.afterEach #2");
-    logPageVisit(to);    
+    logPageVisit(to);
   }
 });
 
