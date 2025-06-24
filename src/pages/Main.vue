@@ -26,6 +26,8 @@ const preWrongWord = ref({});
 const isChoiceMode = ref(false);
 const choiceMeanings = ref([]);
 const checkWords = ref([]);
+const books = ref([]);
+const selectBook = ref('');
 
 const isCheckWord = computed(() =>
     checkWords.value.some(item => item.word === currentWord.value.word)
@@ -224,7 +226,14 @@ async function selectChapter(user) {
             if (snapshot.exists()) {
                 const data = snapshot.val();
                 quizChapters.value = data.chapter;
-                checkWords.value = data.check?.[currUser] || [];
+                checkWords.value = data.check?.[user] || [];
+
+                books.value = [...new Set(
+                    Object.values(quizChapters.value)
+                        .filter(item => item.user === user)
+                        .map(item => item.book))];
+
+                selectBook.value = books.value[0];
 
             } else {
                 console.log("No data available");
@@ -246,7 +255,7 @@ function toggleCheckWord(currWord, isExist) {
     if (isExist) {
         const index = checkWords.value.findIndex(item => item.word === currWord.word);
         if (index !== -1) {
-        checkWords.value.splice(index, 1);
+            checkWords.value.splice(index, 1);
         }
 
     } else {
@@ -278,6 +287,21 @@ async function saveCheckWord() {
 
 // }
 
+function resetChapter() {
+    
+    for (const key in quizChapters.value) {
+        const item = quizChapters.value[key];
+        if (item.user === currUser && item.select) {
+            item.select = false;
+            const saveData = { [key]: { "select": false, "user": currUser, "book": item.book } };
+            //console.log("saveData", saveData);
+            saveQuizChapter(saveData);
+        }
+    }
+    //console.log("quizChapters.value", quizChapters.value);
+    chapters.value = [];
+}
+
 // Watcher 설정
 watch(chapters, (newValue, oldValue) => {
     if (Object.keys(oldValue).length === 0) return;
@@ -302,7 +326,7 @@ watch(chapters, (newValue, oldValue) => {
     }
 
     if (action != null) {
-        const saveData = { [chapter]: { "select": action, "user": currUser } };
+        const saveData = { [chapter]: { "select": action, "user": currUser, "book": selectBook.value } };
         quizChapters.value[chapter].select = action;
         saveQuizChapter(saveData);
     }
@@ -365,8 +389,8 @@ function getNewKey(list) {
 }
 
 async function onClickHint() {
-    
-    
+
+
     makeChoiceMeaning();
     //console.log("힌트", choiceMeanings.value)
     isChoiceMode.value = true;
@@ -465,8 +489,8 @@ onMounted(async () => {
                         <span id="wrong">
                             <v-icon color="red-darken-4" v-for="n in currentWord.wrongCount">mdi-close-thick</v-icon>
                         </span>
-                        <v-icon class="ml-2" v-if="currentWord.word && selectWords.length > 0" style="vertical-align: top;"
-                            @click="toggleCheckWord(currentWord, isCheckWord)" size="32px"
+                        <v-icon class="ml-2" v-if="currentWord.word && selectWords.length > 0"
+                            style="vertical-align: top;" @click="toggleCheckWord(currentWord, isCheckWord)" size="32px"
                             :color="isCheckWord ? 'red' : 'grey-lighten-3'">mdi-check</v-icon>
                     </v-col>
                 </v-row>
@@ -481,21 +505,21 @@ onMounted(async () => {
                     <v-col cols="4" class="no-wrap">
                         <v-btn color="light-green-lighten-5" @click="isMeaningView = !isMeaningView"
                             style="height: 50px;"><v-icon color="green">mdi-magnify</v-icon>뜻보기</v-btn>
-                            <v-btn :color="isChoiceMode ? 'green' : 'rgba(0, 0, 0, 0.2)'" icon="mdi-lightbulb-alert"
+                        <v-btn :color="isChoiceMode ? 'green' : 'rgba(0, 0, 0, 0.2)'" icon="mdi-lightbulb-alert"
                             variant="text" size="24px" @click="onClickHint()"></v-btn>
                     </v-col>
                     <v-col cols="4" class="no-wrap">
                         <v-badge color="blue" :content="correctCount"><v-btn color="blue-lighten-5"
                                 @click="markCorrect()" style="height: 50px;"><v-icon
                                     color="blue">mdi-circle-outline</v-icon>정답</v-btn></v-badge>
-                        <v-btn :color="Object.keys(preCorrectWord).length === 0 ? 'rgba(0, 0, 0, 0.2)' : 'blue'" icon="mdi-undo"
-                            variant="text" size="24px" @click="cancelCorrect()"></v-btn>
+                        <v-btn :color="Object.keys(preCorrectWord).length === 0 ? 'rgba(0, 0, 0, 0.2)' : 'blue'"
+                            icon="mdi-undo" variant="text" size="24px" @click="cancelCorrect()"></v-btn>
                     </v-col>
                     <v-col cols="4" class="no-wrap">
                         <v-badge color="error" :content="wrongCount"><v-btn color="red-lighten-5" @click="markWrong()"
                                 style="height: 50px;"><v-icon color="red">mdi-close</v-icon>오답</v-btn></v-badge>
-                        <v-btn :color="Object.keys(preWrongWord).length === 0 ? 'rgba(0, 0, 0, 0.2)' : 'red'" icon="mdi-undo"
-                            variant="text" size="24px" @click="cancelWrong()"></v-btn>
+                        <v-btn :color="Object.keys(preWrongWord).length === 0 ? 'rgba(0, 0, 0, 0.2)' : 'red'"
+                            icon="mdi-undo" variant="text" size="24px" @click="cancelWrong()"></v-btn>
                     </v-col>
                 </v-row>
                 <v-sheet v-if="wrongWords.length > 0 && !isChoiceMode" class="sheet pa-4 mx-auto" rounded="lg"
@@ -520,22 +544,28 @@ onMounted(async () => {
             <v-snackbar v-model="isMeaningWrongWordView" :timeout="2000" color="success" variant="tonal">
                 {{ meaningWrongWord }}
             </v-snackbar>
-            <v-dialog v-model="isSetPopup" max-width="500">
-                <v-card title="학습 단원 선택">
+        </v-main>
+        <v-dialog v-model="isSetPopup" max-width="500">
+            <v-card>
+                <v-card-title>학습 단원 선택
+                    <v-btn icon="mdi-broom" flat @click="resetChapter()"></v-btn>
+                </v-card-title>
+                <v-card-text>
+                    <v-select v-model="selectBook" :items="books" variant="outlined" />
                     <v-container>
-                        <v-row>
+                        <v-row no-gutters>
                             <v-col
-                                v-for="c in Object.keys(quizChapters).filter(key => quizChapters[key].user === currUser).sort()"
+                                v-for="c in Object.keys(quizChapters).filter(key => quizChapters[key].user === currUser && quizChapters[key].book === selectBook).sort()"
                                 cols="6">
                                 <v-switch v-model="chapters" color="red" :label="c" :value="c" hide-details></v-switch>
                             </v-col>
                         </v-row>
                     </v-container>
-                </v-card>
-                <v-fab icon="mdi-close" color="blue" @click="isSetPopup = false" class="fixed-fab">
-                </v-fab>
-            </v-dialog>            
-        </v-main>
+                </v-card-text>
+            </v-card>
+            <v-fab icon="mdi-close" color="grey-lighten-2" @click="isSetPopup = false" class="fixed-fab">
+            </v-fab>
+        </v-dialog>
 
         <v-progress-linear :model-value="progress" color="green"></v-progress-linear>
 
@@ -596,7 +626,7 @@ onMounted(async () => {
 
 .fixed-fab {
     position: fixed;
-    top: 16px;
+    top: 10px;
     /* 화면 하단에서 16px 위 */
     right: 16px;
     /* 화면 우측에서 16px 왼쪽 */
