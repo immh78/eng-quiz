@@ -562,7 +562,7 @@ onMounted(async () => {
                     </v-container>
                 </v-card-text>
             </v-card>
-            <v-fab icon="mdi-close" color="grey-lighten-2" @click="isSetPopup = false" class="fixed-fab">
+            <v-fab icon="mdi-close" color="yellow-darken-3" @click="isSetPopup = false" class="fixed-fab" variant="text">
             </v-fab>
         </v-dialog>
 
@@ -625,9 +625,9 @@ onMounted(async () => {
 
 .fixed-fab {
     position: fixed;
-    top: 10px;
+    top: 8px;
     /* 화면 하단에서 16px 위 */
-    right: 16px;
+    right: 12px;
     /* 화면 우측에서 16px 왼쪽 */
     z-index: 1050;
     /* 다른 요소 위에 표시되도록 설정 */
