@@ -446,17 +446,14 @@ onMounted(async () => {
                 <v-row justify="center">
                     <v-col cols="auto">
                         <v-btn-toggle v-model="toggleMode" variant="outlined" color="primary" mandatory>
-                            <v-btn value="quiz" @click="changeMode()">
+                            <v-btn value="quiz" density="compact" @click="changeMode()">
                                 <span>퀴즈</span>
-                                <v-icon end>mdi-chat-question</v-icon>
                             </v-btn>
-                            <v-btn value="memorize" @click="changeMode()">
+                            <v-btn value="memorize" density="compact" @click="changeMode()">
                                 <span>암기</span>
-                                <v-icon end>mdi-chat-alert</v-icon>
                             </v-btn>
-                            <v-btn value="check" @click="changeMode()">
+                            <v-btn value="check" density="compact" @click="changeMode()">
                                 <span>체크</span><small>({{ checkWords?.length || 0 }})</small>
-                                <v-icon end>mdi-note-edit</v-icon>
                             </v-btn>
                         </v-btn-toggle>
                     </v-col>
@@ -579,7 +576,7 @@ onMounted(async () => {
 
 #wordRow {
     position: absolute;
-    top: 220px;
+    top: 280px;
     justify-content: center;
     display: flex;
     width: 100%;
@@ -587,7 +584,7 @@ onMounted(async () => {
 
 #buttonRow {
     position: absolute;
-    top: 370px;
+    top: 430px;
     justify-content: center;
     display: flex;
     width: 100%;
@@ -595,7 +592,7 @@ onMounted(async () => {
 
 #meaningRow {
     position: absolute;
-    top: 320px;
+    top: 380px;
     justify-content: center;
     display: flex;
     width: 100%;
@@ -604,7 +601,7 @@ onMounted(async () => {
 .sheet {
     position: absolute;
     justify-content: center;
-    top: 450px;
+    top: 510px;
 }
 
 
