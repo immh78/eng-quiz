@@ -28,6 +28,9 @@ const choiceMeanings = ref([]);
 const checkWords = ref([]);
 const books = ref([]);
 const selectBook = ref('');
+const tooltipQuizVisible = ref(false);
+const tooltipMemorizeVisible = ref(false);
+const tooltipCheckVisible = ref(false);
 
 const isCheckWord = computed(() =>
     checkWords.value.some(item => item.word === currentWord.value.word)
@@ -61,6 +64,19 @@ function changeMode() {
         pickRandomWord();
         if (isChoiceMode) makeChoiceMeaning();
     }
+
+    switch (toggleMode.value) {
+        case "quiz":
+            showTooltip(tooltipQuizVisible);
+            break;
+        case "memorize":
+            showTooltip(tooltipMemorizeVisible);
+            break;
+        case "check":
+            showTooltip(tooltipCheckVisible);
+            break;
+    }
+
 }
 
 function changeChapter(param) {
@@ -288,7 +304,7 @@ async function saveCheckWord() {
 // }
 
 function resetChapter() {
-    
+
     for (const key in quizChapters.value) {
         const item = quizChapters.value[key];
         if (item.user === currUser && item.select) {
@@ -398,6 +414,15 @@ async function onClickHint() {
     isChoiceMode.value = false;
 }
 
+function showTooltip(Obj) {
+    Obj.value = true
+
+    // 2초 후 자동으로 닫기
+    setTimeout(() => {
+        Obj.value = false
+    }, 2000)
+}
+
 
 onMounted(async () => {
     if (window.location.href.includes('/gw')) {
@@ -446,15 +471,30 @@ onMounted(async () => {
                 <v-row justify="center">
                     <v-col cols="auto">
                         <v-btn-toggle v-model="toggleMode" variant="outlined" color="primary" mandatory>
-                            <v-btn value="quiz" density="compact" @click="changeMode()">
-                                <span>퀴즈</span>
-                            </v-btn>
-                            <v-btn value="memorize" density="compact" @click="changeMode()">
-                                <span>암기</span>
-                            </v-btn>
-                            <v-btn value="check" density="compact" @click="changeMode()">
-                                <span>체크</span><small>({{ checkWords?.length || 0 }})</small>
-                            </v-btn>
+                            <v-tooltip color="pink" location="bottom" text="학습단원의 단어들이 무작위로 나타납니다." :open-on-hover="false" open-on-click
+                                v-model="tooltipQuizVisible">
+                                <template v-slot:activator="{ props }">
+                                    <v-btn v-bind="props" value="quiz" density="compact" @click="changeMode()">
+                                        <span>퀴즈</span>
+                                    </v-btn>
+                                </template>
+                            </v-tooltip>
+                            <v-tooltip location="bottom" text="선택한 단원의 단어를 순차적으로 나타냅니다." :open-on-hover="false" open-on-click
+                                v-model="tooltipMemorizeVisible">
+                                <template v-slot:activator="{ props }">
+                                    <v-btn v-bind="props" value="memorize" density="compact" @click="changeMode()">
+                                        <span>암기</span>
+                                    </v-btn>
+                                </template>
+                            </v-tooltip>
+                            <v-tooltip location="bottom" text="체크한 단어를 무작위로 나타냅니다." :open-on-hover="false" open-on-click
+                                v-model="tooltipCheckVisible">
+                                <template v-slot:activator="{ props }">
+                                    <v-btn v-bind="props" value="check" density="compact" @click="changeMode()">
+                                        <span>체크</span><small>({{ checkWords?.length || 0 }})</small>
+                                    </v-btn>
+                                </template>
+                            </v-tooltip>
                         </v-btn-toggle>
                     </v-col>
                     <v-col class="d-flex justify-end">
@@ -530,8 +570,8 @@ onMounted(async () => {
                     </v-row>
                 </v-sheet>
                 <v-sheet v-if="isChoiceMode" class="sheet pa-4 mx-auto" rounded="lg" width="92%" color="#f2fff4">
-                    <v-chip v-for="item in choiceMeanings" :color="isWrong && item.isCorrect ? 'red' : 'green'" text-color="white"
-                        class="chip-spacing" @click="onclick_meaning(item.isCorrect)">
+                    <v-chip v-for="item in choiceMeanings" :color="isWrong && item.isCorrect ? 'red' : 'green'"
+                        text-color="white" class="chip-spacing" @click="onclick_meaning(item.isCorrect)">
                         {{ item.meaning }}
                     </v-chip>
                 </v-sheet>
@@ -545,7 +585,9 @@ onMounted(async () => {
                 <v-card-title>학습 단원 선택</v-card-title>
                 <v-card-text>
                     <v-select v-model="selectBook" :items="books" variant="outlined" />
-                    <v-btn color="yellow-darken-4" @click="resetChapter()" variant="tonal"><v-icon>mdi-selection-remove</v-icon> 전체선택해제</v-btn>
+                    <v-btn color="yellow-darken-4" @click="resetChapter()"
+                        variant="tonal"><v-icon>mdi-selection-remove</v-icon>
+                        전체선택해제</v-btn>
                     <v-container>
                         <v-row no-gutters>
                             <v-col
@@ -557,7 +599,8 @@ onMounted(async () => {
                     </v-container>
                 </v-card-text>
             </v-card>
-            <v-fab icon="mdi-close" color="yellow-darken-3" @click="isSetPopup = false" class="fixed-fab" variant="text">
+            <v-fab icon="mdi-close" color="yellow-darken-3" @click="isSetPopup = false" class="fixed-fab"
+                variant="text">
             </v-fab>
         </v-dialog>
 
