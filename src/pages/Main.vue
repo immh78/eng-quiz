@@ -530,12 +530,10 @@ onMounted(async () => {
                     </v-row>
                 </v-sheet>
                 <v-sheet v-if="isChoiceMode" class="sheet pa-4 mx-auto" rounded="lg" width="92%" color="#f2fff4">
-                    <v-row v-for="item in choiceMeanings">
-                        <v-chip :color="isWrong && item.isCorrect ? 'red' : 'green'" text-color="white"
-                            class="chip-spacing" @click="onclick_meaning(item.isCorrect)">
-                            {{ item.meaning }}
-                        </v-chip>
-                    </v-row>
+                    <v-chip v-for="item in choiceMeanings" :color="isWrong && item.isCorrect ? 'red' : 'green'" text-color="white"
+                        class="chip-spacing" @click="onclick_meaning(item.isCorrect)">
+                        {{ item.meaning }}
+                    </v-chip>
                 </v-sheet>
             </v-container>
             <v-snackbar v-model="isMeaningWrongWordView" :timeout="2000" color="success" variant="tonal">
