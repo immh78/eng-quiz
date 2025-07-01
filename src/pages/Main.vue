@@ -405,8 +405,6 @@ function getNewKey(list) {
 }
 
 async function onClickHint() {
-
-
     makeChoiceMeaning();
     //console.log("힌트", choiceMeanings.value)
     isChoiceMode.value = true;
@@ -422,7 +420,6 @@ function showTooltip(Obj) {
         Obj.value = false
     }, 2000)
 }
-
 
 onMounted(async () => {
     if (window.location.href.includes('/gw')) {
@@ -447,8 +444,6 @@ onMounted(async () => {
 
     selectingWord('');
     pickRandomWord();
-
-
 })
 
 </script>
@@ -464,8 +459,7 @@ onMounted(async () => {
                     <v-btn icon="mdi-cog" @click="isSetPopup = true"></v-btn>
                 </template>
 
-                <v-app-bar-title><v-icon>mdi-book</v-icon> {{ currUser === "GW" ? "경원" : "채원" }}이 영어
-                    단어장</v-app-bar-title>
+                <v-app-bar-title><v-icon>mdi-book</v-icon> {{ currUser === "GW" ? "경원" : "채원" }}이 영어 단어장</v-app-bar-title>
             </v-app-bar>
             <v-container>
                 <v-row justify="center">

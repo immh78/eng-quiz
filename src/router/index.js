@@ -2,7 +2,7 @@ import { createRouter, createWebHashHistory } from 'vue-router';
 import { database, ref as firebaseRef, push } from "../config/firebase";
 import { useUserStore } from '../store/user';
 
-import Main from '../pages/Main.vue';
+import Main from '../pages/main.vue';
 import Login from '../pages/Login.vue';
 import Register from '../pages/Register.vue';
 
