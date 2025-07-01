@@ -1,5 +1,5 @@
 <script setup>
-import { database, ref as firebaseRef, get, update, set, auth} from "../config/firebase";
+import { database, ref as firebaseRef, get, update, set, auth } from "../config/firebase";
 import { signOut } from 'firebase/auth';
 
 import { ref, watch, onMounted, computed } from "vue";
@@ -287,7 +287,7 @@ function toggleCheckWord(currWord, isExist) {
 }
 
 async function saveCheckWord() {
-    const data =  checkWords.value;
+    const data = checkWords.value;
     //console.log("saveCheckWord", data);
     try {
         const dbRef = firebaseRef(database, `eng-quiz/check/${uid.value}`);
@@ -299,9 +299,9 @@ async function saveCheckWord() {
 }
 
 async function logout() {
-  await signOut(auth);
-  userStore.clearUser();
-  //router.push('/login');
+    await signOut(auth);
+    userStore.clearUser();
+    //router.push('/login');
 };
 
 
@@ -426,6 +426,10 @@ async function onClickHint() {
 }
 
 function showTooltip(Obj) {
+    tooltipQuizVisible.value = false;
+    tooltipMemorizeVisible.value = false;
+    tooltipCheckVisible.value = false;
+
     Obj.value = true
 
     // 2초 후 자동으로 닫기
@@ -434,7 +438,7 @@ function showTooltip(Obj) {
     }, 2000)
 }
 
-async function selectUserInfo() {    
+async function selectUserInfo() {
     uid.value = userStore.user.uid;
     const dbRef = firebaseRef(database, `user/${uid.value}`);
     await get(dbRef)
@@ -499,16 +503,16 @@ onMounted(async () => {
                 <v-row justify="center">
                     <v-col cols="auto">
                         <v-btn-toggle v-model="toggleMode" variant="outlined" color="primary" mandatory>
-                            <v-tooltip color="pink" location="bottom" text="학습단원의 단어들이 무작위로 나타납니다." :open-on-hover="false" open-on-click
-                                v-model="tooltipQuizVisible">
+                            <v-tooltip color="pink" location="bottom" text="학습단원의 단어들이 무작위로 나타납니다."
+                                :open-on-hover="false" open-on-click v-model="tooltipQuizVisible">
                                 <template v-slot:activator="{ props }">
                                     <v-btn v-bind="props" value="quiz" density="compact" @click="changeMode()">
                                         <span>퀴즈</span>
                                     </v-btn>
                                 </template>
                             </v-tooltip>
-                            <v-tooltip location="bottom" text="선택한 단원의 단어를 순차적으로 나타냅니다." :open-on-hover="false" open-on-click
-                                v-model="tooltipMemorizeVisible">
+                            <v-tooltip location="bottom" text="선택한 단원의 단어를 순차적으로 나타냅니다." :open-on-hover="false"
+                                open-on-click v-model="tooltipMemorizeVisible">
                                 <template v-slot:activator="{ props }">
                                     <v-btn v-bind="props" value="memorize" density="compact" @click="changeMode()">
                                         <span>암기</span>
@@ -550,7 +554,7 @@ onMounted(async () => {
                     <v-col cols="auto">
                         <span id="word" :style="{ fontSize: wordFontSize + 'px' }" @click="speechWord()">{{
                             currentWord.word
-                            }}</span>
+                        }}</span>
                         <span id="wrong">
                             <v-icon color="red-darken-4" v-for="n in currentWord.wrongCount">mdi-close-thick</v-icon>
                         </span>
