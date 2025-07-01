@@ -1,6 +1,7 @@
 <script setup>
 import { database, ref as firebaseRef, get, update, set } from "../config/firebase";
 import { ref, watch, onMounted, computed } from "vue";
+import { useUserStore } from '../store/user';
 
 let currUser = "";
 
@@ -31,6 +32,8 @@ const selectBook = ref('');
 const tooltipQuizVisible = ref(false);
 const tooltipMemorizeVisible = ref(false);
 const tooltipCheckVisible = ref(false);
+const userName = ref('');
+const uid = ref('');
 
 const isCheckWord = computed(() =>
     checkWords.value.some(item => item.word === currentWord.value.word)
@@ -242,7 +245,7 @@ async function selectChapter(user) {
             if (snapshot.exists()) {
                 const data = snapshot.val();
                 quizChapters.value = data.chapter;
-                checkWords.value = data.check?.[user] || [];
+                checkWords.value = data.check?.[uid.value] || [];
 
                 books.value = [...new Set(
                     Object.values(quizChapters.value)
@@ -281,10 +284,10 @@ function toggleCheckWord(currWord, isExist) {
 }
 
 async function saveCheckWord() {
-    const data = { [currUser]: checkWords.value };
+    const data =  checkWords.value;
     //console.log("saveCheckWord", data);
     try {
-        const dbRef = firebaseRef(database, "eng-quiz/check");
+        const dbRef = firebaseRef(database, `eng-quiz/check/${uid.value}`);
         await set(dbRef, data); // 데이터를 저장
         console.log("Data saved successfully!");
     } catch (err) {
@@ -421,12 +424,34 @@ function showTooltip(Obj) {
     }, 2000)
 }
 
+async function selectUserInfo() {
+    const userStore = useUserStore();
+    uid.value = userStore.user.uid;
+    const dbRef = firebaseRef(database, `user/${uid.value}`);
+    await get(dbRef)
+        .then(snapshot => {
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                userName.value = data.name;
+            } else {
+                console.log("No data available");
+            }
+        })
+        .catch(err => {
+            console.error("Error fetching data:", err);
+            error.value = err.message;
+        });
+
+}
+
 onMounted(async () => {
     if (window.location.href.includes('/gw')) {
         currUser = "GW";
     } else {
         currUser = "CW";
     }
+
+    await selectUserInfo();
 
     await selectChapter(currUser);
 
@@ -459,7 +484,7 @@ onMounted(async () => {
                     <v-btn icon="mdi-cog" @click="isSetPopup = true"></v-btn>
                 </template>
 
-                <v-app-bar-title><v-icon>mdi-book</v-icon> {{ currUser === "GW" ? "경원" : "채원" }}이 영어 단어장</v-app-bar-title>
+                <v-app-bar-title><v-icon>mdi-book</v-icon> {{ userName }}'s 영어 단어장</v-app-bar-title>
             </v-app-bar>
             <v-container>
                 <v-row justify="center">
