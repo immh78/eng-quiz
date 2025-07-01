@@ -13,10 +13,6 @@ const routes = [
   {
     path: '/gw', component: Main, comment: '경원 영어 단어장', icon: 'mdi-book',
     meta: { requiresAuth: true, loggable: true }
-  },
-  {
-    path: '/login', component: Login, comment: '로그인', icon: 'mdi-login',
-    meta: { requiresAuth: false, loggable: false }
   }
 ]
 
