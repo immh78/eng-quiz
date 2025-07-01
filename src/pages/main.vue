@@ -1,5 +1,7 @@
 <script setup>
-import { database, ref as firebaseRef, get, update, set } from "../config/firebase";
+import { database, ref as firebaseRef, get, update, set, auth} from "../config/firebase";
+import { signOut } from 'firebase/auth';
+
 import { ref, watch, onMounted, computed } from "vue";
 import { useUserStore } from '../store/user';
 
@@ -32,6 +34,7 @@ const selectBook = ref('');
 const tooltipQuizVisible = ref(false);
 const tooltipMemorizeVisible = ref(false);
 const tooltipCheckVisible = ref(false);
+const userStore = useUserStore();
 const userName = ref('');
 const uid = ref('');
 
@@ -295,6 +298,13 @@ async function saveCheckWord() {
     }
 }
 
+async function logout() {
+  await signOut(auth);
+  userStore.clearUser();
+  //router.push('/login');
+};
+
+
 // async function deleteCheckWord(key) {
 //     try {
 //         const dbRef = firebaseRef(database, `eng-quiz/check/${currUser}/${key}`);
@@ -424,8 +434,7 @@ function showTooltip(Obj) {
     }, 2000)
 }
 
-async function selectUserInfo() {
-    const userStore = useUserStore();
+async function selectUserInfo() {    
     uid.value = userStore.user.uid;
     const dbRef = firebaseRef(database, `user/${uid.value}`);
     await get(dbRef)
@@ -484,7 +493,7 @@ onMounted(async () => {
                     <v-btn icon="mdi-cog" @click="isSetPopup = true"></v-btn>
                 </template>
 
-                <v-app-bar-title><v-icon>mdi-book</v-icon> {{ userName }}'s 영어 단어장</v-app-bar-title>
+                <v-app-bar-title><v-icon @click="logout()">mdi-book</v-icon> {{ userName }}'s 영어 단어장</v-app-bar-title>
             </v-app-bar>
             <v-container>
                 <v-row justify="center">

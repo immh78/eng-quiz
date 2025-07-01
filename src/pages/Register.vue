@@ -21,7 +21,7 @@ const register = async () => {
         const userCredential = await createUserWithEmailAndPassword(auth, email.value, password.value);
         const user = userCredential.user;
 
-        saveUser();
+        saveUser(user.uid);
         alert(`환영합니다, ${user.email} 님!`);
         router.push('/login');
     } catch (error) {
@@ -45,9 +45,9 @@ const register = async () => {
 };
 
 
-async function saveUser() {
+async function saveUser(uid) {
     const data = {
-        [auth.currentUser.uid]: {
+        [uid]: {
             name: name.value,
             email: email.value
         }
