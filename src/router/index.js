@@ -3,8 +3,6 @@ import { database, ref as firebaseRef, push } from "../config/firebase";
 import { useUserStore } from '../store/user';
 
 import Main from '../pages/main.vue';
-import Login from '../pages/Login.vue';
-import Register from '../pages/Register.vue';
 
 const routes = [
   { path: '/', redirect: '/cw' },
@@ -19,11 +17,7 @@ const routes = [
   {
     path: '/login', component: Login, comment: '로그인', icon: 'mdi-login',
     meta: { requiresAuth: false, loggable: false }
-  },
-  {
-    path: '/register', component: Register, comment: '회원등록', icon: 'mdi-account-plus',
-    meta: { requiresAuth: false, loggable: false }
-  },
+  }
 ]
 
 const router = createRouter({
@@ -37,7 +31,9 @@ router.beforeEach((to, from, next) => {
 
   // 로그인 필요
   if (to.meta.requiresAuth && !uid) {
-    return next({ path: '/login', query: { redirect: to.fullPath } });
+    const fullUrl = window.location.href;
+    window.location.href = `https://immh78.github.io/tools/#/login?redirect=${encodeURIComponent(fullUrl)}`;
+    return;
   }
 
   next(); // 통과
