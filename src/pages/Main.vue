@@ -342,7 +342,7 @@ watch(chapters, (newValue, oldValue) => {
     }
 
     if (action != null) {
-        const saveData = { [chapter]: { "select": action, "user": currUser, "book": selectBook.value } };
+        const saveData = { [chapter]: { "select": action, "user": currUser, "book": quizChapters.value[chapter].book } };
         quizChapters.value[chapter].select = action;
         saveQuizChapter(saveData);
     }
