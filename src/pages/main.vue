@@ -439,7 +439,10 @@ function showTooltip(Obj) {
 }
 
 async function selectUserInfo() {
-    uid.value = userStore.user.uid;
+    uid.value = userStore.user.uid === 'Pd3M2l2WV8PGI8duqyOLZMMH6Dn1' ? 'dofQjw5EhyZ3zOxOdGASyQUSKFE2' : userStore.user.uid;
+    //Pd3M2l2WV8PGI8duqyOLZMMH6Dn1 : 문명훈
+    //dofQjw5EhyZ3zOxOdGASyQUSKFE2 : 문채원
+
     const dbRef = firebaseRef(database, `user/${uid.value}`);
     await get(dbRef)
         .then(snapshot => {
