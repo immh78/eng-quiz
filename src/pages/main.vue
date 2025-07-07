@@ -42,7 +42,7 @@ const uid = ref('');
 const isCheckPopup = ref(false);
 
 const isCheckWord = computed(() =>
-    checkWords.value.some(item => item.word === currentWord.value.word)
+    checkWords.value ? checkWords.value.some(item => item.word === currentWord.value.word) : false
 );
 
 
@@ -140,21 +140,7 @@ function markCorrect() {
     if (currentWord.value.wrongCount > 0) {
         wrongWords.value = wrongWords.value.filter(item => item.word !== currentWord.value.word);
     }
-    //console.log("mode", toggleMode.value)
-
-    // if (toggleMode.value === 'check') {
-    //     checkWords.value.splice(currentWord.value.key, 1);
-    //     saveCheckWord();
-
-    //     Object.keys(checkWords.value).forEach(key => {
-    //         checkWords.value[key]["key"] = Number(key);
-    //     });
-
-    // }
-
     preCorrectWord.value = { ...currentWord.value };
-
-    //console.log("#1", preCorrectWord.value);
 
     pickRandomWord();
     if (isChoiceMode) makeChoiceMeaning();
@@ -177,7 +163,6 @@ function markWrong() {
         wrongWords.value.push(currentWord.value);
     }
 
-    //console.log("#2", currentWord.value);
     preWrongWord.value = { ...currentWord.value };
 
     pickRandomWord();
@@ -185,7 +170,6 @@ function markWrong() {
 }
 
 function cancelCorrect() {
-    //console.log("#3", preCorrectWord.value);
     if (Object.keys(preCorrectWord.value).length === 0) return;
     correctCount.value--;
     currentWord.value = { ...preCorrectWord.value };
@@ -210,8 +194,8 @@ function updateProgress() {
     progress.value = Math.round(((totalCount.value - selectWords.value.length) / totalCount.value) * 100);
 }
 
-function speechWord() {
-    const utterance = new SpeechSynthesisUtterance(currentWord.value.word);
+function speechWord(word) {
+    const utterance = new SpeechSynthesisUtterance(word);
     utterance.lang = 'en-US';
     speechSynthesis.speak(utterance);
 }
@@ -284,9 +268,6 @@ async function selectCheckList() {
             if (snapshot.exists()) {
                 checkList.value = snapshot.val();
                 checkWords.value = checkList.value.books?.[checkList.value.checkBook] || [];
-
-                console.log('checkList.value', checkList.value);
-                console.log('checkList.value.checkBook', checkList.value.checkBook);
             } else {
                 console.log("No data available");
             }
@@ -295,13 +276,9 @@ async function selectCheckList() {
             console.error("Error fetching data:", err);
             error.value = err.message;
         });
-
-    //console.log("checkList.value", checkList.value);
-    //console.log("checkWords.value", checkWords.value);
 }
 
 function toggleCheckWord(currWord, isExist) {
-    console.log('checkWords.value', checkWords.value)
     if (isExist) {
         const index = checkWords.value.findIndex(item => item.word === currWord.word);
         if (index !== -1) {
@@ -316,14 +293,15 @@ function toggleCheckWord(currWord, isExist) {
 
 async function saveCheckWord() {
     const data = checkWords.value;
-    //console.log("saveCheckWord", data);
+    checkList.value.books[checkList.value.checkBook] = data;
+
     try {
         const dbRef = firebaseRef(database, `eng-quiz/check2/${uid.value}/books/${checkList.value.checkBook}`);
         await set(dbRef, data); // 데이터를 저장
         console.log("Data saved successfully!");
     } catch (err) {
         console.error("Error saving data:", err);
-    }
+    }    
 }
 
 async function logout() {
@@ -332,18 +310,6 @@ async function logout() {
     //router.push('/login');
 };
 
-
-// async function deleteCheckWord(key) {
-//     try {
-//         const dbRef = firebaseRef(database, `eng-quiz/check/${currUser}/${key}`);
-//         await remove(dbRef); // 데이터를 저장
-//         console.log("Data saved successfully!");
-//     } catch (err) {
-//         console.error("Error saving data:", err);
-//     }
-
-// }
-
 function resetChapter() {
 
     for (const key in quizChapters.value) {
@@ -351,20 +317,15 @@ function resetChapter() {
         if (item.user === currUser && item.select) {
             item.select = false;
             const saveData = { [key]: { "select": false, "user": currUser, "book": item.book } };
-            //console.log("saveData", saveData);
             saveQuizChapter(saveData);
         }
     }
-    //console.log("quizChapters.value", quizChapters.value);
     chapters.value = [];
 }
 
 // Watcher 설정
 watch(chapters, (newValue, oldValue) => {
     if (Object.keys(oldValue).length === 0) return;
-
-    //console.log("new", newValue);
-    //console.log("old", oldValue);
 
     const addedValues = newValue.filter(value => !oldValue.includes(value));
     const removedValues = oldValue.filter(value => !newValue.includes(value));
@@ -398,7 +359,6 @@ function makeChoiceMeaning() {
     }
 
     choiceMeanings.value = shuffleArray(choiceMeanings.value);
-    //console.log(choiceMeanings.value);
 }
 
 function getRandomMeaning() {
@@ -437,7 +397,6 @@ function onClickCheckPopup() {
         checkList.value.checkBook = "기본";
         checkWords.value = [];
     }
-    console.log("checkList.value", checkList.value);
 
     isCheckPopup.value = true;
 }
@@ -458,7 +417,6 @@ function getNewKey(list) {
 
 async function onClickHint() {
     makeChoiceMeaning();
-    //console.log("힌트", choiceMeanings.value)
     isChoiceMode.value = true;
     await sleep(3000);
     isChoiceMode.value = false;
@@ -478,13 +436,9 @@ function showTooltip(Obj) {
 }
 
 async function chageCheckList(book) {
-    console.log("chageCheckList", book);
-    return;
-
     const data = { "checkBook": book };
     checkList.value.checkBook = book;
-    checkWords.value = checkList.value.books[book] || [];
-    checkList.value.books[book] = checkWords.value;
+    checkWords.value = checkList.value.books?.[book] || [];
 
     try {
         const dbRef = firebaseRef(database, "eng-quiz/check2/" + uid.value);
@@ -507,11 +461,11 @@ async function deleteCheckList(book) {
     }
 
     delete checkList.value.books[book];
+    checkWords.value = [];
 
     chageCheckList('기본');
 
     isCheckPopup.value = false;
-
 }
 
 
@@ -638,8 +592,9 @@ onMounted(async () => {
                 </v-row>
                 <v-row id="wordRow">
                     <v-col cols="auto">
-                        <span id="word" :style="{ fontSize: wordFontSize + 'px' }" @click="speechWord()">{{
-                            currentWord.word
+                        <span id="word" :style="{ fontSize: wordFontSize + 'px' }"
+                            @click="speechWord(currentWord.word)">{{
+                                currentWord.word
                             }}</span>
                         <span id="wrong">
                             <v-icon color="red-darken-4" v-for="n in currentWord.wrongCount">mdi-close-thick</v-icon>
@@ -726,13 +681,12 @@ onMounted(async () => {
             <v-card>
                 <v-card-title>체크북 선택</v-card-title>
                 <v-card-text>
-                    <v-table>
+                    <v-table density="compact">
                         <tbody>
                             <tr v-for="book in Object.keys(checkList.books)">
-                                <td>{{ book }} ({{ checkList.books[book].length }})</td>
-                                <td style="text-align: right;">
-                                    <v-btn icon="mdi-check-bold" variant="text" @click="chageCheckList(book)"></v-btn>
-                                    <v-btn icon="mdi-delete" :disabled="book === '기본'" variant="text"
+                                <td><span @click="chageCheckList(book)">{{ book }} ({{ checkList.books[book].length }})</span></td>
+                                <td class="pa-0 ma-0" style="text-align: right;">
+                                    <v-btn icon="mdi-delete" variant="text"
                                         @click="deleteCheckList(book)"></v-btn>
                                 </td>
                             </tr>
@@ -744,8 +698,8 @@ onMounted(async () => {
                             <v-text-field :rules="[rules.required]" label="새로운 체크북" v-model="newCheckBook"
                                 variant="outlined"></v-text-field>
                         </v-col>
-                        <v-col cols="2">
-                            <v-btn icon="mdi-check-bold" flat @click="chageCheckList(newCheckBook)"></v-btn>
+                        <v-col cols="2" class="pr-7">
+                            <v-btn icon="mdi-check-bold" variant="text" @click="chageCheckList(newCheckBook)" :disabled="newCheckBook === ''"></v-btn>
                         </v-col>
                     </v-row>
 
