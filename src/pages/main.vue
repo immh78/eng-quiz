@@ -259,7 +259,7 @@ async function selectChapter(user) {
 
 
 async function selectCheckList() {
-    const dbRef = firebaseRef(database, "eng-quiz/check2/" + uid.value);
+    const dbRef = firebaseRef(database, "eng-quiz/check/" + uid.value);
     checkList.value = {};
     checkWords.value = [];
 
@@ -296,7 +296,7 @@ async function saveCheckWord() {
     checkList.value.books[checkList.value.checkBook] = data;
 
     try {
-        const dbRef = firebaseRef(database, `eng-quiz/check2/${uid.value}/books/${checkList.value.checkBook}`);
+        const dbRef = firebaseRef(database, `eng-quiz/check/${uid.value}/books/${checkList.value.checkBook}`);
         await set(dbRef, data); // 데이터를 저장
         console.log("Data saved successfully!");
     } catch (err) {
@@ -441,7 +441,7 @@ async function chageCheckList(book) {
     checkWords.value = checkList.value.books?.[book] || [];
 
     try {
-        const dbRef = firebaseRef(database, "eng-quiz/check2/" + uid.value);
+        const dbRef = firebaseRef(database, "eng-quiz/check/" + uid.value);
         await update(dbRef, data); // 데이터를 저장
         console.log("Data saved successfully!");
     } catch (err) {
@@ -453,7 +453,7 @@ async function chageCheckList(book) {
 
 async function deleteCheckList(book) {
     try {
-        const dbRef1 = firebaseRef(database, "eng-quiz/check2/" + uid.value + "/books/" + book);
+        const dbRef1 = firebaseRef(database, "eng-quiz/check/" + uid.value + "/books/" + book);
         await remove(dbRef1); // 데이터를 저장
         console.log("Data deleted successfully!");
     } catch (err) {
