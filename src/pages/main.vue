@@ -1,5 +1,5 @@
 <script setup>
-import { database, ref as firebaseRef, get, update, set, auth } from "../config/firebase";
+import { database, ref as firebaseRef, get, update, set, remove, auth } from "../config/firebase";
 import { signOut } from 'firebase/auth';
 
 import { ref, watch, onMounted, computed } from "vue";
@@ -29,6 +29,8 @@ const preWrongWord = ref({});
 const isChoiceMode = ref(false);
 const choiceMeanings = ref([]);
 const checkWords = ref([]);
+const checkList = ref({});
+const newCheckBook = ref('');
 const books = ref([]);
 const selectBook = ref('');
 const tooltipQuizVisible = ref(false);
@@ -37,6 +39,7 @@ const tooltipCheckVisible = ref(false);
 const userStore = useUserStore();
 const userName = ref('');
 const uid = ref('');
+const isCheckPopup = ref(false);
 
 const isCheckWord = computed(() =>
     checkWords.value.some(item => item.word === currentWord.value.word)
@@ -47,7 +50,9 @@ const isCheckWord = computed(() =>
 const quizChapters = ref(null);
 const error = ref(null);
 
-
+const rules = {
+    required: v => !!v || '필수 입력 값입니다.'
+};
 
 function selectingWord(param) {
     if (toggleMode.value == "quiz") {
@@ -242,14 +247,11 @@ async function saveQuizChapter(data) {
 }
 
 async function selectChapter(user) {
-    const dbRef = firebaseRef(database, "eng-quiz");
+    const dbRef = firebaseRef(database, "eng-quiz/chapter");
     await get(dbRef)
         .then(snapshot => {
             if (snapshot.exists()) {
-                const data = snapshot.val();
-                quizChapters.value = data.chapter;
-                checkWords.value = data.check?.[uid.value] || [];
-
+                quizChapters.value = snapshot.val();
                 books.value = [...new Set(
                     Object.values(quizChapters.value)
                         .filter(item => item.user === user)
@@ -266,14 +268,40 @@ async function selectChapter(user) {
             error.value = err.message;
         });
 
-    //console.log(user);
-
     if (quizChapters.value) {
         chapters.value = Object.keys(quizChapters.value).filter(key => quizChapters.value[key].select && quizChapters.value[key].user === user);
     }
 }
 
+
+async function selectCheckList() {
+    const dbRef = firebaseRef(database, "eng-quiz/check2/" + uid.value);
+    checkList.value = {};
+    checkWords.value = [];
+
+    await get(dbRef)
+        .then(snapshot => {
+            if (snapshot.exists()) {
+                checkList.value = snapshot.val();
+                checkWords.value = checkList.value.books?.[checkList.value.checkBook] || [];
+
+                console.log('checkList.value', checkList.value);
+                console.log('checkList.value.checkBook', checkList.value.checkBook);
+            } else {
+                console.log("No data available");
+            }
+        })
+        .catch(err => {
+            console.error("Error fetching data:", err);
+            error.value = err.message;
+        });
+
+    //console.log("checkList.value", checkList.value);
+    //console.log("checkWords.value", checkWords.value);
+}
+
 function toggleCheckWord(currWord, isExist) {
+    console.log('checkWords.value', checkWords.value)
     if (isExist) {
         const index = checkWords.value.findIndex(item => item.word === currWord.word);
         if (index !== -1) {
@@ -290,7 +318,7 @@ async function saveCheckWord() {
     const data = checkWords.value;
     //console.log("saveCheckWord", data);
     try {
-        const dbRef = firebaseRef(database, `eng-quiz/check/${uid.value}`);
+        const dbRef = firebaseRef(database, `eng-quiz/check2/${uid.value}/books/${checkList.value.checkBook}`);
         await set(dbRef, data); // 데이터를 저장
         console.log("Data saved successfully!");
     } catch (err) {
@@ -402,6 +430,17 @@ async function onclick_meaning(isCorrect) {
     }
 }
 
+function onClickCheckPopup() {
+    newCheckBook.value = '';
+    if (!checkList.value.books || Object.keys(checkList.value.books).length === 0) {
+        checkList.value.books = { "기본": [] };
+        checkList.value.checkBook = "기본";
+        checkWords.value = [];
+    }
+    console.log("checkList.value", checkList.value);
+
+    isCheckPopup.value = true;
+}
 function getNewKey(list) {
     let key = 0;
     if (list) {
@@ -437,6 +476,44 @@ function showTooltip(Obj) {
         Obj.value = false
     }, 2000)
 }
+
+async function chageCheckList(book) {
+    console.log("chageCheckList", book);
+    return;
+
+    const data = { "checkBook": book };
+    checkList.value.checkBook = book;
+    checkWords.value = checkList.value.books[book] || [];
+    checkList.value.books[book] = checkWords.value;
+
+    try {
+        const dbRef = firebaseRef(database, "eng-quiz/check2/" + uid.value);
+        await update(dbRef, data); // 데이터를 저장
+        console.log("Data saved successfully!");
+    } catch (err) {
+        console.error("Error saving data:", err);
+    }
+
+    isCheckPopup.value = false;
+}
+
+async function deleteCheckList(book) {
+    try {
+        const dbRef1 = firebaseRef(database, "eng-quiz/check2/" + uid.value + "/books/" + book);
+        await remove(dbRef1); // 데이터를 저장
+        console.log("Data deleted successfully!");
+    } catch (err) {
+        console.error("Error saving data:", err);
+    }
+
+    delete checkList.value.books[book];
+
+    chageCheckList('기본');
+
+    isCheckPopup.value = false;
+
+}
+
 
 async function selectUserInfo() {
     uid.value = userStore.user.uid === 'Pd3M2l2WV8PGI8duqyOLZMMH6Dn1' ? 'dofQjw5EhyZ3zOxOdGASyQUSKFE2' : userStore.user.uid;
@@ -485,6 +562,7 @@ onMounted(async () => {
 
     selectingWord('');
     pickRandomWord();
+    selectCheckList();
 })
 
 </script>
@@ -527,10 +605,15 @@ onMounted(async () => {
                                 <template v-slot:activator="{ props }">
                                     <v-btn v-bind="props" value="check" density="compact" @click="changeMode()">
                                         <span>체크</span><small>({{ checkWords?.length || 0 }})</small>
+                                        <span style="position: absolute; bottom: 2px; opacity: 0.7; font-size: 8px">{{
+                                            checkList.checkBook }}</span>
                                     </v-btn>
                                 </template>
                             </v-tooltip>
                         </v-btn-toggle>
+                        <v-icon style="vertical-align: top;" @click="onClickCheckPopup()" size="14">
+                            mdi-cog
+                        </v-icon>
                     </v-col>
                     <v-col class="d-flex justify-end">
                         <div class="d-flex flex-column align-center">
@@ -557,7 +640,7 @@ onMounted(async () => {
                     <v-col cols="auto">
                         <span id="word" :style="{ fontSize: wordFontSize + 'px' }" @click="speechWord()">{{
                             currentWord.word
-                        }}</span>
+                            }}</span>
                         <span id="wrong">
                             <v-icon color="red-darken-4" v-for="n in currentWord.wrongCount">mdi-close-thick</v-icon>
                         </span>
@@ -638,6 +721,41 @@ onMounted(async () => {
                 variant="text">
             </v-fab>
         </v-dialog>
+
+        <v-dialog v-model="isCheckPopup" max-width="500">
+            <v-card>
+                <v-card-title>체크북 선택</v-card-title>
+                <v-card-text>
+                    <v-table>
+                        <tbody>
+                            <tr v-for="book in Object.keys(checkList.books)">
+                                <td>{{ book }} ({{ checkList.books[book].length }})</td>
+                                <td style="text-align: right;">
+                                    <v-btn icon="mdi-check-bold" variant="text" @click="chageCheckList(book)"></v-btn>
+                                    <v-btn icon="mdi-delete" :disabled="book === '기본'" variant="text"
+                                        @click="deleteCheckList(book)"></v-btn>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </v-table>
+
+                    <v-row class="mt-4">
+                        <v-col cols="10">
+                            <v-text-field :rules="[rules.required]" label="새로운 체크북" v-model="newCheckBook"
+                                variant="outlined"></v-text-field>
+                        </v-col>
+                        <v-col cols="2">
+                            <v-btn icon="mdi-check-bold" flat @click="chageCheckList(newCheckBook)"></v-btn>
+                        </v-col>
+                    </v-row>
+
+                </v-card-text>
+            </v-card>
+            <v-fab icon="mdi-close" color="yellow-darken-3" @click="isCheckPopup = false" class="fixed-fab"
+                variant="text">
+            </v-fab>
+        </v-dialog>
+
 
         <v-progress-linear :model-value="progress" color="green"></v-progress-linear>
 
