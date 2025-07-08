@@ -5,8 +5,6 @@ import { signOut } from 'firebase/auth';
 import { ref, watch, onMounted, computed } from "vue";
 import { useUserStore } from '../store/user';
 
-let currUser = "";
-
 const chapters = ref([]);
 const toggleMode = ref("quiz");
 const toggleChapter = ref("");
@@ -220,17 +218,17 @@ function showMeaningWrongWord(param) {
 }
 
 
-async function saveQuizChapter(data) {
+async function saveSelectedChapter() {
     try {
-        const dbRef = firebaseRef(database, "eng-quiz/chapter");
-        await update(dbRef, data); // 데이터를 저장
+        const dbRef = firebaseRef(database, "eng-quiz/selectedChapter/" + uid.value);
+        await set(dbRef, chapters.value); // 데이터를 저장
         console.log("Data saved successfully!");
     } catch (err) {
         console.error("Error saving data:", err);
     }
 }
 
-async function selectChapter(user) {
+async function selectQuizChapters() {
     const dbRef = firebaseRef(database, "eng-quiz/chapter");
     await get(dbRef)
         .then(snapshot => {
@@ -238,11 +236,9 @@ async function selectChapter(user) {
                 quizChapters.value = snapshot.val();
                 books.value = [...new Set(
                     Object.values(quizChapters.value)
-                        .filter(item => item.user === user)
                         .map(item => item.book))];
 
                 selectBook.value = books.value[0];
-
             } else {
                 console.log("No data available");
             }
@@ -251,10 +247,22 @@ async function selectChapter(user) {
             console.error("Error fetching data:", err);
             error.value = err.message;
         });
+}
 
-    if (quizChapters.value) {
-        chapters.value = Object.keys(quizChapters.value).filter(key => quizChapters.value[key].select && quizChapters.value[key].user === user);
-    }
+async function selectChapter() {
+    const dbRef = firebaseRef(database, "eng-quiz/selectedChapter/" + uid.value);
+    await get(dbRef)
+        .then(snapshot => {
+            if (snapshot.exists()) {
+                chapters.value = snapshot.val();
+            } else {
+                console.log("No data available");
+            }
+        })
+        .catch(err => {
+            console.error("Error fetching data:", err);
+            error.value = err.message;
+        });
 }
 
 
@@ -311,43 +319,15 @@ async function logout() {
 };
 
 function resetChapter() {
-
-    for (const key in quizChapters.value) {
-        const item = quizChapters.value[key];
-        if (item.user === currUser && item.select) {
-            item.select = false;
-            const saveData = { [key]: { "select": false, "user": currUser, "book": item.book } };
-            saveQuizChapter(saveData);
-        }
-    }
     chapters.value = [];
+    saveSelectedChapter();
 }
 
 // Watcher 설정
 watch(chapters, (newValue, oldValue) => {
     if (Object.keys(oldValue).length === 0) return;
 
-    const addedValues = newValue.filter(value => !oldValue.includes(value));
-    const removedValues = oldValue.filter(value => !newValue.includes(value));
-
-    let action = null;
-    let chapter = "";
-
-    // 추가된 값과 삭제된 값에 따라 로직 실행
-    if (addedValues.length > 0) {
-        chapter = addedValues[0];
-        action = true;
-    }
-    if (removedValues.length > 0) {
-        action = false;
-        chapter = removedValues[0];
-    }
-
-    if (action != null) {
-        const saveData = { [chapter]: { "select": action, "user": currUser, "book": quizChapters.value[chapter].book } };
-        quizChapters.value[chapter].select = action;
-        saveQuizChapter(saveData);
-    }
+    saveSelectedChapter();
 });
 
 function makeChoiceMeaning() {
@@ -399,20 +379,6 @@ function onClickCheckPopup() {
     }
 
     isCheckPopup.value = true;
-}
-function getNewKey(list) {
-    let key = 0;
-    if (list) {
-        const keys = Object.keys(list).map(Number); // 문자열이 아닌 숫자로 변환
-        // 0부터 순차적으로 증가하며 비어있는 값을 찾기
-        while (keys.includes(key)) {
-            key++;
-        }
-    } else {
-        key = 0;
-    }
-
-    return key;
 }
 
 async function onClickHint() {
@@ -491,16 +457,15 @@ async function selectUserInfo() {
 
 }
 
-onMounted(async () => {
-    if (window.location.href.includes('/gw')) {
-        currUser = "GW";
-    } else {
-        currUser = "CW";
-    }
+async function onClickChapterPopup() {
+    await selectQuizChapters();
+    isSetPopup.value = true;
+}
 
+onMounted(async () => {
     await selectUserInfo();
 
-    await selectChapter(currUser);
+    await selectChapter();
 
     const wordsFilePath = 'words.json';
 
@@ -529,7 +494,7 @@ onMounted(async () => {
                     <v-img gradient="to top right, rgba(19,84,122,.8), rgba(128,208,199,.8)"></v-img>
                 </template>
                 <template v-slot:append>
-                    <v-btn icon="mdi-cog" @click="isSetPopup = true"></v-btn>
+                    <v-btn icon="mdi-cog" @click="onClickChapterPopup()"></v-btn>
                 </template>
 
                 <v-app-bar-title><v-icon @click="logout()">mdi-book</v-icon> {{ userName }}'s 영어 단어장</v-app-bar-title>
@@ -664,7 +629,7 @@ onMounted(async () => {
                     <v-container>
                         <v-row no-gutters>
                             <v-col
-                                v-for="c in Object.keys(quizChapters).filter(key => quizChapters[key].user === currUser && quizChapters[key].book === selectBook).sort()"
+                                v-for="c in Object.keys(quizChapters).filter(key => quizChapters[key].book === selectBook).sort()"
                                 cols="6">
                                 <v-switch v-model="chapters" color="red" :label="c" :value="c" hide-details></v-switch>
                             </v-col>
