@@ -546,13 +546,17 @@ onMounted(async () => {
                     <v-col cols="auto">
                         <v-btn-toggle v-model="toggleChapter" color="deep-purple-accent-3" rounded="0" group
                             class="multi-line-btn-toggle">
-                            <v-btn v-for="chapter in chapters" :key="chapter" :value="chapter"
-                                :readonly="toggleMode != 'memorize' ? true : false"
-                                :style="chapter == currentWord.chapter && toggleMode != 'memorize' ? 'text-decoration: underline' : ''"
-                                @click="changeChapter(chapter)">
+                            <span v-for="chapter in chapters" :key="chapter" :value="chapter"
+                                style="font-size: 9px; margin-right: 8px; text-decoration: underline;"
+                                @click="changeChapter(chapter)" >
                                 {{ chapter }}
-                            </v-btn>
+                                </span>
                         </v-btn-toggle>
+                    </v-col>
+                </v-row>
+                <v-row justify="center">
+                    <v-col cols="auto">
+                        <v-select v-model="toggleChapter" :items="chapters" variant="outlined" />
                     </v-col>
                 </v-row>
                 <v-row id="wordRow">
