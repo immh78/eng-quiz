@@ -254,7 +254,8 @@ async function selectChapter() {
     await get(dbRef)
         .then(snapshot => {
             if (snapshot.exists()) {
-                chapters.value = snapshot.val();
+                chapters.value = snapshot.val().sort();
+                //console.log("Selected chapters:", chapters.value); 
             } else {
                 console.log("No data available");
             }
