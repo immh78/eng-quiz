@@ -309,7 +309,7 @@ async function saveCheckWord() {
         console.log("Data saved successfully!");
     } catch (err) {
         console.error("Error saving data:", err);
-    }    
+    }
 }
 
 async function logout() {
@@ -544,15 +544,17 @@ onMounted(async () => {
                 </v-row>
                 <v-row justify="center">
                     <v-col cols="auto">
-                        <v-btn-toggle v-model="toggleChapter" color="deep-purple-accent-3" rounded="0" group
-                            class="multi-line-btn-toggle">
-                            <v-btn v-for="chapter in chapters" :key="chapter" :value="chapter"
-                                :readonly="toggleMode != 'memorize' ? true : false"
-                                :style="chapter == currentWord.chapter && toggleMode != 'memorize' ? 'text-decoration: underline' : ''"
-                                @click="changeChapter(chapter)">
-                                {{ chapter }}
-                            </v-btn>
-                        </v-btn-toggle>
+                        <span v-for="chapter in chapters" :key="chapter" :value="chapter"
+                            :style="'font-size: 9px; margin-right: 8px;'
+                                + (chapter === currentWord.chapter ? 'font-weight: bold; color: blue;' : ' text-decoration: underline;')">
+                            {{ chapter }}
+                        </span>
+                    </v-col>
+                </v-row>
+                <v-row justify="center">
+                    <v-col cols="auto">
+                        <v-select v-if="toggleMode == 'memorize'" v-model="toggleChapter" :items="chapters"
+                            variant="outlined" @update:modelValue="changeChapter(toggleChapter)" />
                     </v-col>
                 </v-row>
                 <v-row id="wordRow">
@@ -649,10 +651,11 @@ onMounted(async () => {
                     <v-table density="compact">
                         <tbody>
                             <tr v-for="book in Object.keys(checkList.books)">
-                                <td><span @click="chageCheckList(book)">{{ book }} ({{ checkList.books[book].length }})</span></td>
+                                <td><span @click="chageCheckList(book)">{{ book }} ({{ checkList.books[book].length
+                                        }})</span>
+                                </td>
                                 <td class="pa-0 ma-0" style="text-align: right;">
-                                    <v-btn icon="mdi-delete" variant="text"
-                                        @click="deleteCheckList(book)"></v-btn>
+                                    <v-btn icon="mdi-delete" variant="text" @click="deleteCheckList(book)"></v-btn>
                                 </td>
                             </tr>
                         </tbody>
@@ -664,7 +667,8 @@ onMounted(async () => {
                                 variant="outlined"></v-text-field>
                         </v-col>
                         <v-col cols="2" class="pr-7">
-                            <v-btn icon="mdi-check-bold" variant="text" @click="chageCheckList(newCheckBook)" :disabled="newCheckBook === ''"></v-btn>
+                            <v-btn icon="mdi-check-bold" variant="text" @click="chageCheckList(newCheckBook)"
+                                :disabled="newCheckBook === ''"></v-btn>
                         </v-col>
                     </v-row>
 
