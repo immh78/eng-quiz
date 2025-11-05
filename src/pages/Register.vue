@@ -65,25 +65,37 @@ async function saveUser(uid) {
 </script>
 
 <template>
-    <v-container class="d-flex align-center justify-center fill-height">
-        <v-card width="400" class="pa-6">
-            <v-card-title class="text-h5 text-center">회원가입</v-card-title>
+    <v-container class="d-flex align-center justify-center fill-height register-container">
+        <v-card width="420" class="pa-8 register-card" elevation="3">
+            <div class="text-center mb-6">
+                <v-icon color="primary" size="64" class="mb-4">mdi-account-plus</v-icon>
+                <v-card-title class="text-h4 font-weight-bold pa-0 mb-2" style="color: #263238;">회원가입</v-card-title>
+                <p class="text-body-2" style="color: #757575;">새로운 계정을 만드세요</p>
+            </div>
 
             <v-form @submit.prevent="register">
-                <v-text-field v-model="name" label="이름" prepend-inner-icon="mdi-account" type="text" required />
+                <v-text-field v-model="name" label="이름" prepend-inner-icon="mdi-account-outline" 
+                    type="text" variant="outlined" class="mb-3" required />
 
-                <v-text-field v-model="email" label="Email" prepend-inner-icon="mdi-email" type="email" required />
+                <v-text-field v-model="email" label="이메일" prepend-inner-icon="mdi-email-outline" 
+                    type="email" variant="outlined" class="mb-3" required />
 
-                <v-text-field v-model="password" label="Password" prepend-inner-icon="mdi-lock"
-                    :type="showPassword ? 'text' : 'password'" :append-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
-                    @click:append="showPassword = !showPassword" required />
+                <v-text-field v-model="password" label="비밀번호" prepend-inner-icon="mdi-lock-outline"
+                    :type="showPassword ? 'text' : 'password'" 
+                    :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
+                    @click:append-inner="showPassword = !showPassword" 
+                    variant="outlined"
+                    class="mb-2"
+                    required />
 
-                <v-btn :loading="loading" color="primary" class="mt-4" type="submit" block>
+                <v-btn :loading="loading" color="primary" class="mt-4" type="submit" block size="large">
+                    <v-icon class="mr-2">mdi-account-plus</v-icon>
                     회원가입
                 </v-btn>
             </v-form>
 
-            <v-alert v-if="errorMessage" type="error" class="mt-4" dense>
+            <v-alert v-if="errorMessage" type="error" class="mt-4" variant="tonal" density="compact">
+                <v-icon class="mr-2">mdi-alert-circle</v-icon>
                 {{ errorMessage }}
             </v-alert>
         </v-card>
@@ -91,6 +103,16 @@ async function saveUser(uid) {
 </template>
 
 <style scoped>
+.register-container {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
+
+.register-card {
+    border-radius: 16px;
+    background: white;
+}
+
 .fill-height {
     min-height: 100vh;
 }

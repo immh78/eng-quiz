@@ -38,6 +38,8 @@ const userStore = useUserStore();
 const userName = ref('');
 const uid = ref('');
 const isCheckPopup = ref(false);
+const isSiteNotificationPopup = ref(false);
+const newSiteUrl = ref('https://my-eng-word.vercel.app/');
 
 const isCheckWord = computed(() =>
     checkWords.value ? checkWords.value.some(item => item.word === currentWord.value.word) : false
@@ -463,6 +465,14 @@ async function onClickChapterPopup() {
     isSetPopup.value = true;
 }
 
+function openNewSite() {
+    window.open(newSiteUrl.value, '_blank');
+}
+
+function closeSiteNotification() {
+    isSiteNotificationPopup.value = false;
+}
+
 onMounted(async () => {
     await selectUserInfo();
 
@@ -483,6 +493,9 @@ onMounted(async () => {
     selectingWord('');
     pickRandomWord();
     selectCheckList();
+    
+    // 사이트 알림 팝업 표시
+    isSiteNotificationPopup.value = true;
 })
 
 </script>
@@ -682,6 +695,25 @@ onMounted(async () => {
 
 
         <v-progress-linear :model-value="progress" color="green"></v-progress-linear>
+
+        <v-dialog v-model="isSiteNotificationPopup" max-width="500" persistent>
+            <v-card>
+                <v-card-title>사이트 알림</v-card-title>
+                <v-card-text>
+                    <p class="mb-4">영어 단어장이 변경되었습니다.</p>
+                    <p class="text-center">
+                        <a @click="openNewSite" :href="newSiteUrl" target="_blank" 
+                           style="color: #1976d2; text-decoration: underline; cursor: pointer;">
+                            {{ newSiteUrl }}
+                        </a>
+                    </p>
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn color="primary" @click="closeSiteNotification">닫기</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
 
     </v-app>
 

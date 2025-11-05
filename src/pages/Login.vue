@@ -67,28 +67,41 @@ function goToRegister() {
 </script>
 
 <template>
-  <v-container class="d-flex align-center justify-center fill-height">
-    <v-card width="400" class="pa-6">
-      <v-card-title class="text-h5 text-center">로그인</v-card-title>
+  <v-container class="d-flex align-center justify-center fill-height login-container">
+    <v-card width="420" class="pa-8 login-card" elevation="3">
+      <div class="text-center mb-6">
+        <v-icon color="primary" size="64" class="mb-4">mdi-book-open-variant</v-icon>
+        <v-card-title class="text-h4 font-weight-bold pa-0 mb-2" style="color: #263238;">영어 단어장</v-card-title>
+        <p class="text-body-2" style="color: #757575;">로그인하여 학습을 시작하세요</p>
+      </div>
 
       <v-form @submit.prevent="login()">
-        <v-text-field v-model="email" label="Email" prepend-inner-icon="mdi-email" type="email" required />
+        <v-text-field v-model="email" label="이메일" prepend-inner-icon="mdi-email-outline" 
+          type="email" variant="outlined" class="mb-3" required />
 
-        <v-text-field v-model="password" label="Password" prepend-inner-icon="mdi-lock"
-          :type="showPassword ? 'text' : 'password'" :append-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
-          @click:append="showPassword = !showPassword" required @keydown.enter="login()" />
+        <v-text-field v-model="password" label="비밀번호" prepend-inner-icon="mdi-lock-outline"
+          :type="showPassword ? 'text' : 'password'" 
+          :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
+          @click:append-inner="showPassword = !showPassword" 
+          variant="outlined" 
+          class="mb-2"
+          required 
+          @keydown.enter="login()" />
 
-        <v-btn :loading="loading" color="primary" class="mt-4" type="submit" block>
+        <v-btn :loading="loading" color="primary" class="mt-4" type="submit" block size="large">
+          <v-icon class="mr-2">mdi-login</v-icon>
           로그인
         </v-btn>
-        <v-btn variant="text" class="mt-2" block @click="resetPassword">
+        <v-btn variant="text" class="mt-2" block @click="resetPassword" size="small">
           비밀번호를 잊으셨나요?
         </v-btn>
       </v-form>
 
-      <div class="text-center mt-4">
-        <p>계정이 없으신가요?</p>
-        <v-btn variant="outlined" color="secondary" @click="goToRegister()">
+      <v-divider class="my-6"></v-divider>
+
+      <div class="text-center">
+        <p class="text-body-2 mb-3" style="color: #757575;">계정이 없으신가요?</p>
+        <v-btn variant="outlined" color="primary" @click="goToRegister()" block>
           회원가입
         </v-btn>
       </div>
@@ -97,6 +110,16 @@ function goToRegister() {
 </template>
 
 <style scoped>
+.login-container {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+
+.login-card {
+  border-radius: 16px;
+  background: white;
+}
+
 .fill-height {
   min-height: 100vh;
 }
