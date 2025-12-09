@@ -700,7 +700,7 @@ onMounted(async () => {
             <v-card>
                 <v-card-title>사이트 알림</v-card-title>
                 <v-card-text>
-                    <p class="mb-4">영어 단어장이 변경되었습니다.</p>
+                    <p class="mb-4">영어 단어장이 변경되었습니다.<br>예문 출력 기능이 포함된 새로운 단어장을 이용해 보세요.</p>
                     <p class="text-center">
                         <a @click="openNewSite" :href="newSiteUrl" target="_blank" 
                            style="color: #1976d2; text-decoration: underline; cursor: pointer;">
